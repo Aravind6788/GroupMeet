@@ -1,7 +1,7 @@
 const socket = io("/");
 const videoGrid = document.getElementById("video-grid");
 const myPeer = new Peer(undefined, {
-  host: "peer-server-domain.com", // Change to your Peer server domain
+  host: "https://peer-ckmk.onrender.com/", // Change to your Peer server domain
   path: "/myapp",
   secure: true,
   port: 443,
