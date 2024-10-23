@@ -1,11 +1,11 @@
 const socket = io('/')
 const videoGrid = document.getElementById('video-grid')
-const myPeer = new Peer(undefined, {
-  host: "peer-testing.onrender.com",
-  path: "/peerjs",
-  secure: true,
+const myPeer = new Peer({
+  host: "peerjs.com",
   port: 443,
+  secure: true,
 });
+
 const myVideo = document.createElement('video')
 myVideo.muted = true
 const peers = {}
