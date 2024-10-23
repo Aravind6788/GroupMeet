@@ -1,9 +1,10 @@
 const socket = io('/')
 const videoGrid = document.getElementById('video-grid')
 const myPeer = new Peer(undefined, {
-  host: '/',
-  port: '3001'
-})
+  host: "group-meet-e8y3.onrender.com",
+  port: 443,
+  secure: true,
+});
 const myVideo = document.createElement('video')
 myVideo.muted = true
 const peers = {}
