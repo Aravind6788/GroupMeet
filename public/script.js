@@ -2,7 +2,7 @@ const socket = io("/");
 const videoGrid = document.getElementById("video-grid");
 const myPeer = new Peer(undefined, {
   host: "https://peer-ckmk.onrender.com/", // Change to your Peer server domain
-  path: "/myapp",
+  path: "/",
   secure: true,
   port: 443,
 });
