@@ -33,24 +33,29 @@
         h1 {
             text-align: center;
         }
-        #output, #translated {
+        #output, #remote-captions {
             margin-top: 20px;
             padding: 10px;
             background-color: #fff;
             border: 1px solid #ddd;
             min-height: 50px;
         }
-        button {
-            display: block;
-            margin: 20px auto;
-            padding: 10px 20px;
-            font-size: 16px;
-            cursor: pointer;
+        .caption-container {
+            position: fixed;
+            bottom: 20px;
+            left: 0;
+            right: 0;
+            z-index: 1000;
+            text-align: center;
         }
-        select {
-            margin: 20px auto;
-            display: block;
-            font-size: 16px;
+        .caption {
+            background-color: rgba(0, 0, 0, 0.7);
+            color: black;
+            padding: 10px;
+            margin: 5px auto;
+            max-width: 80%;
+            border-radius: 5px;
+            min-height: 30px;
         }
     </style>
 </head>
@@ -61,7 +66,10 @@
     
     
     
-    <div id="output">Speech will appear here...</div>
+    <div class="caption-container">
+        <div id="output" class="caption">Speech will appear here...</div>
+        <div id="remote-captions" class="caption">Remote participant captions...</div>
+    </div>
 
     <div id="video-grid"></div>
     

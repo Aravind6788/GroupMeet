@@ -53,8 +53,8 @@ app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
 
-  if (user && await bcrypt.compare(password, user.password)) {
-    res.redirect("/home"); // Redirect to home page after successful login
+  if (user && (await bcrypt.compare(password, user.password))) {
+    res.redirect("/home");
   } else {
     res.status(400).send("Invalid username or password");
   }
@@ -62,12 +62,12 @@ app.post("/login", async (req, res) => {
 
 // Show home page
 app.get("/home", (req, res) => {
-  res.render("home"); // Render the new Home page
+  res.render("home");
 });
 
 // Handle button click to join room
 app.get("/room", (req, res) => {
-  res.redirect(`/${uuidV4()}`); // Redirect to a unique room
+  res.redirect(`/${uuidV4()}`);
 });
 
 // Main room route
@@ -81,8 +81,12 @@ io.on("connection", (socket) => {
   socket.on("join-room", (roomId, userId) => {
     console.log(`User ${userId} joining room ${roomId}`);
     socket.join(roomId);
-
     socket.to(roomId).emit("user-connected", userId);
+
+    // Handle speech recognition results
+    socket.on("speech-result", (roomId, text) => {
+      socket.to(roomId).emit("remote-speech", text);
+    });
 
     socket.on("disconnect", () => {
       console.log(`User ${userId} disconnected from room ${roomId}`);

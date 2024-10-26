@@ -4,11 +4,34 @@ const SpeechRecognition =
 if (SpeechRecognition) {
   const recognition = new SpeechRecognition();
   const output = document.getElementById("output");
-  recognition.lang = "ta-IN"; // Set language to English
-  recognition.interimResults = true; // Allow interim results
+  recognition.lang = "ta-IN";
+  recognition.interimResults = true;
   recognition.maxAlternatives = 1;
 
-  let isRecognizing = false; // Flag to track recognition state
+  let isRecognizing = false;
+  let audioContext;
+  let mediaStreamSource;
+
+  // Listen for the audio stream from video call
+  window.addEventListener("audioStreamReady", (event) => {
+    const stream = event.detail.stream;
+
+    // Initialize audio context
+    audioContext = new (window.AudioContext || window.webkitAudioContext)();
+    mediaStreamSource = audioContext.createMediaStreamSource(stream);
+
+    startRecognition();
+  });
+
+  function startRecognition() {
+    if (!isRecognizing) {
+      try {
+        recognition.start();
+      } catch (error) {
+        console.log("Recognition already started");
+      }
+    }
+  }
 
   recognition.onstart = () => {
     console.log("Speech recognition started");
@@ -18,9 +41,11 @@ if (SpeechRecognition) {
   recognition.onresult = (event) => {
     const results = event.results;
     const speechResult = results[results.length - 1][0].transcript;
-    output.innerText = ` ${speechResult}`;
+    output.innerText = `${speechResult}`;
 
-    // Clear the caption after 3 seconds
+    // Emit the speech result to other participants
+    socket.emit("speech-result", ROOM_ID, speechResult);
+
     setTimeout(() => {
       output.innerText = "";
     }, 3000);
@@ -29,34 +54,27 @@ if (SpeechRecognition) {
   recognition.onspeechend = () => {
     console.log("Speech ended");
     isRecognizing = false;
-    // Stop recognition to reset
     recognition.stop();
   };
 
   recognition.onerror = (event) => {
-    output.innerText = `Error occurred: ${event.error}`;
     console.log("Error occurred in recognition:", event.error);
     isRecognizing = false;
 
-    // Restart if there was no speech or it was aborted
     if (event.error === "no-speech" || event.error === "aborted") {
       recognition.stop();
+      setTimeout(startRecognition, 1000);
     }
   };
 
-  // Function to continuously check and restart recognition
-  const checkRecognitionStatus = () => {
+  // Check recognition status every second
+  setInterval(() => {
     if (!isRecognizing) {
-      console.log("Restarting recognition...");
-      recognition.start();
+      startRecognition();
     }
-  };
+  }, 1000);
 
-  // Start checking recognition status every second
-  setInterval(checkRecognitionStatus, 1000);
-
-  // Start recognition when the page loads
-  recognition.start();
+  // Add language selector functionality if needed
 } else {
   document.getElementById("output").innerText =
     "Sorry, your browser does not support Speech Recognition.";
