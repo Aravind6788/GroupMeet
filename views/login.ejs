@@ -1,22 +1,43 @@
-<!-- /views/login.ejs -->
 <!DOCTYPE html>
 <html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Login</title>
-</head>
-<body>
-  <h2>Login</h2>
-  <form action="/login" method="POST">
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required><br>
+<%- include('partials/head') %>
+<body class="bg-gray-50">
 
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required><br>
+    <div class="main-container">
+        <div class="form-container">
+            <h2>Welcome back!</h2>
+            <p>Meet the good taste today</p>
+            
+            <form action="/login" method="POST">
+                <div class="form-group">
+                    <input type="text" id="username" name="username" class="form-input" placeholder="Type your e-mail or phone number">
+                </div>
+                <div class="form-group">
+                    <input type="password" id="password" name="password" class="form-input" placeholder="Type your password">
+                </div>
+                <button type="submit" class="btn btn-primary">Sign In</button>
+            </form>
+    
+            <div class="social-login">
+                <button class="btn btn-outline">
+                    <img src="/google.png" alt="Google">
+                </button>
+                <button class="btn btn-outline">
+                    <img src="/apple.png" alt="Apple">
+                </button>
+                <button class="btn btn-outline">
+                    <img src="/facebook.png" alt="Facebook">
+                </button>
+            </div>
+    
+            <p style="text-align: center; margin-top: 1rem;">
+                Don't have an account? <a href="/signup">Sign Up</a>
+            </p>
+        </div>
+    </div>
+    
 
-    <button type="submit">Login</button>
-  </form>
-  <p>Don't have an account? <a href="/signup">Sign up</a></p>
 </body>
 </html>
+
+

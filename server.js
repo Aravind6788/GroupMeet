@@ -1,6 +1,7 @@
 // server.js
 const express = require("express");
 const mongoose = require("mongoose");
+const session = require('express-session');
 const connectDB = require("./config/database");
 const User = require("./models/user");
 const bcrypt = require("bcrypt");
@@ -19,7 +20,22 @@ app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-//default page render
+
+// Add session middleware
+app.use(session({
+  secret: 'your-secret-key',
+  resave: false,
+  saveUninitialized: false
+}));
+
+// Add middleware to make user data available to all templates
+app.use((req, res, next) => {
+  res.locals.user = req.session.user || null;
+  next();
+});
+
+
+// default page render
 app.get("/", (req, res) => {
   res.render("login");
 });
@@ -34,6 +50,28 @@ app.get("/signup", (req, res) => {
   res.render("signup");
 });
 
+// it is old room btn home
+app.get("/home", (req, res) => {
+  res.render("home");
+});
+
+//Create meeting room
+app.get("/create-room", (req, res) => {
+  res.render("create-room");
+});
+
+//join meeting by link and password
+app.get("/join-meeting", (req, res) => {
+  res.render("join-meeting");
+});
+
+//joining meeting room by entering name
+app.get("/meeting-room", (req, res) => {
+  res.render("meeting-room");
+});
+
+
+
 // Handle signup form submission
 app.post("/signup", async (req, res) => {
   const { username, password } = req.body;
@@ -46,7 +84,7 @@ app.post("/signup", async (req, res) => {
   } catch (err) {
     res.status(500).send("Error creating user");
   }
-});
+});  
 
 // Handle login form submission
 app.post("/login", async (req, res) => {
@@ -54,16 +92,23 @@ app.post("/login", async (req, res) => {
   const user = await User.findOne({ username });
 
   if (user && (await bcrypt.compare(password, user.password))) {
-    res.redirect("/home");
+    req.session.user = {
+      name: user.username,
+      avatar: user.avatar || '/images/default-avatar.png' // Provide a default avatar path
+    };
+    res.redirect("/meeting-room");
   } else {
     res.status(400).send("Invalid username or password");
   }
 });
 
-// Show home page
-app.get("/home", (req, res) => {
-  res.render("home");
+
+app.get("/logout", (req, res) => {
+  req.session.destroy();
+  res.redirect("/");
 });
+
+
 
 // Handle button click to join room
 app.get("/room", (req, res) => {
