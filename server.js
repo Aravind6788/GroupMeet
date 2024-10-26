@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const server = require("http").Server(app);
+const server = require("http").createServer(app);
 const io = require("socket.io")(server);
 const { v4: uuidV4 } = require("uuid");
 
@@ -17,12 +17,17 @@ app.get("/:room", (req, res) => {
 });
 
 io.on("connection", (socket) => {
+  console.log('New user connected:', socket.id);
+
   socket.on("join-room", (roomId, userId) => {
+    console.log(`User ${userId} joining room ${roomId}`);
     socket.join(roomId);
-    socket.to(roomId).broadcast.emit("user-connected", userId);
+
+    socket.to(roomId).emit("user-connected", userId);
 
     socket.on("disconnect", () => {
-      socket.to(roomId).broadcast.emit("user-disconnected", userId);
+      console.log(`User ${userId} disconnected from room ${roomId}`);
+      socket.to(roomId).emit("user-disconnected", userId);
     });
   });
 });
