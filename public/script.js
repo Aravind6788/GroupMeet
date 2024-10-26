@@ -11,17 +11,14 @@ const myVideo = document.createElement("video");
 myVideo.muted = true;
 const peers = {};
 
-// Get user's media (video/audio)
 navigator.mediaDevices
   .getUserMedia({
-    // Fixed: Removed space between 'getUser' and 'Media'
     video: true,
     audio: true,
   })
   .then((stream) => {
     addVideoStream(myVideo, stream);
 
-    // Emit stream event for speech recognition
     const streamEvent = new CustomEvent("audioStreamReady", {
       detail: { stream },
     });
@@ -36,11 +33,10 @@ navigator.mediaDevices
     });
 
     socket.on("user-connected", (userId) => {
-      connectToNewUser(userId, stream); // Fixed: Removed space between 'connectToNewUser'
+      connectToNewUser(userId, stream);
     });
   })
   .catch((error) => {
-    // Added error handling
     console.error("Error accessing media devices:", error);
     alert("Unable to access camera and microphone. Please check permissions.");
   });
@@ -49,7 +45,6 @@ socket.on("user-disconnected", (userId) => {
   if (peers[userId]) peers[userId].close();
 });
 
-// Handle remote speech events
 socket.on("remote-speech", (data) => {
   const remoteCaptions = document.getElementById("remote-captions");
   const languageName = getLanguageName(data.language);
@@ -85,7 +80,6 @@ function addVideoStream(video, stream) {
   videoGrid.append(video);
 }
 
-// Helper function to get language name
 function getLanguageName(langCode) {
   const languages = {
     "en-US": "English",

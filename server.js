@@ -3,9 +3,6 @@ const mongoose = require("mongoose");
 const connectDB = require("./config/database");
 const User = require("./models/user");
 const bcrypt = require("bcrypt");
-
-require("dotenv").config();
-
 const app = express();
 const server = require("http").createServer(app);
 const io = require("socket.io")(server);
@@ -18,22 +15,18 @@ app.use(express.static("public"));
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-//default page render
 app.get("/", (req, res) => {
   res.render("login");
 });
 
-// Show login page
 app.get("/login", (req, res) => {
   res.render("login");
 });
 
-// Show signup page
 app.get("/signup", (req, res) => {
   res.render("signup");
 });
 
-// Handle signup form submission
 app.post("/signup", async (req, res) => {
   const { username, password } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -47,7 +40,6 @@ app.post("/signup", async (req, res) => {
   }
 });
 
-// Handle login form submission
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
@@ -59,17 +51,14 @@ app.post("/login", async (req, res) => {
   }
 });
 
-// Show home page
 app.get("/home", (req, res) => {
   res.render("home");
 });
 
-// Handle button click to join room
 app.get("/room", (req, res) => {
   res.redirect(`/${uuidV4()}`);
 });
 
-// Main room route
 app.get("/:room", (req, res) => {
   res.render("room", { roomId: req.params.room });
 });
@@ -82,12 +71,10 @@ io.on("connection", (socket) => {
     socket.join(roomId);
     socket.to(roomId).emit("user-connected", userId);
 
-    // Handle speech recognition results
     socket.on("speech-result", (roomId, data) => {
       socket.to(roomId).emit("remote-speech", data);
     });
 
-    // Handle language changes
     socket.on("language-change", (roomId, newLang) => {
       socket.to(roomId).emit("language-change", newLang);
     });
