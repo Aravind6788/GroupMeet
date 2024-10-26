@@ -1,3 +1,4 @@
+// Initialize the socket connection and PeerJS
 const socket = io("/");
 const videoGrid = document.getElementById("video-grid");
 const myPeer = new Peer(undefined, {
@@ -19,6 +20,12 @@ navigator.mediaDevices
   })
   .then((stream) => {
     addVideoStream(myVideo, stream);
+
+    // Emit stream event for speech recognition
+    const streamEvent = new CustomEvent("audioStreamReady", {
+      detail: { stream },
+    });
+    window.dispatchEvent(streamEvent);
 
     // Listen for incoming calls (when other users join)
     myPeer.on("call", (call) => {

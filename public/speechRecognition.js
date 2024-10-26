@@ -4,20 +4,20 @@ const SpeechRecognition =
 if (SpeechRecognition) {
   const recognition = new SpeechRecognition();
   const output = document.getElementById("output");
-
   recognition.lang = "en-US";
-  recognition.interimResults = true; // Allow interim results for continuous speech
+  recognition.interimResults = true;
   recognition.maxAlternatives = 1;
+
+  let isRecognizing = false; // Flag to track recognition state
 
   recognition.onstart = () => {
     console.log("Speech recognition started");
+    isRecognizing = true;
   };
 
   recognition.onresult = (event) => {
     const results = event.results;
-    const speechResult = results[results.length - 1][0].transcript; // Get the latest transcript
-
-    // Display the latest result as a caption
+    const speechResult = results[results.length - 1][0].transcript;
     output.innerText = ` ${speechResult}`;
 
     // Clear the caption after 3 seconds
@@ -27,16 +27,26 @@ if (SpeechRecognition) {
   };
 
   recognition.onspeechend = () => {
-    console.log("Speech ended, restarting recognition...");
-    recognition.start(); // Restart recognition
+    console.log("Speech ended");
+    isRecognizing = false;
+    // Stop recognition to reset, then restart
+    recognition.stop();
+    setTimeout(() => {
+      if (!isRecognizing) recognition.start();
+    }, 500); // Delay to ensure stop has completed
   };
 
   recognition.onerror = (event) => {
     output.innerText = `Error occurred: ${event.error}`;
     console.log("Error occurred in recognition:", event.error);
-    // Attempt to restart recognition if an error occurs
-    if (event.error === "no-speech" || event.error === "aborted") {
-      recognition.start();
+    isRecognizing = false;
+    // Restart only if it’s not already recognizing
+    if (
+      (event.error === "no-speech" || event.error === "aborted") &&
+      !isRecognizing
+    ) {
+      recognition.stop();
+      setTimeout(() => recognition.start(), 500);
     }
   };
 
