@@ -11,7 +11,6 @@ const myVideo = document.createElement("video");
 myVideo.muted = true;
 const peers = {};
 
-// Get user's media (video/audio)
 navigator.mediaDevices
   .getUserMedia({
     video: true,
@@ -20,7 +19,6 @@ navigator.mediaDevices
   .then((stream) => {
     addVideoStream(myVideo, stream);
 
-    // Emit stream event for speech recognition
     const streamEvent = new CustomEvent("audioStreamReady", {
       detail: { stream },
     });
@@ -37,16 +35,20 @@ navigator.mediaDevices
     socket.on("user-connected", (userId) => {
       connectToNewUser(userId, stream);
     });
+  })
+  .catch((error) => {
+    console.error("Error accessing media devices:", error);
+    alert("Unable to access camera and microphone. Please check permissions.");
   });
 
 socket.on("user-disconnected", (userId) => {
   if (peers[userId]) peers[userId].close();
 });
 
-// Handle remote speech events
-socket.on("remote-speech", (text) => {
+socket.on("remote-speech", (data) => {
   const remoteCaptions = document.getElementById("remote-captions");
-  remoteCaptions.innerText = text;
+  const languageName = getLanguageName(data.language);
+  remoteCaptions.innerText = `[${languageName}] ${data.text}`;
 
   setTimeout(() => {
     remoteCaptions.innerText = "";
@@ -76,4 +78,20 @@ function addVideoStream(video, stream) {
     video.play();
   });
   videoGrid.append(video);
+}
+
+function getLanguageName(langCode) {
+  const languages = {
+    "en-US": "English",
+    "ta-IN": "Tamil",
+    "hi-IN": "Hindi",
+    "ja-JP": "Japanese",
+    "ko-KR": "Korean",
+    "zh-CN": "Chinese",
+    "es-ES": "Spanish",
+    "fr-FR": "French",
+    "de-DE": "German",
+    "it-IT": "Italian",
+  };
+  return languages[langCode] || langCode;
 }

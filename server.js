@@ -1,13 +1,9 @@
-// server.js
 const express = require("express");
 const mongoose = require("mongoose");
 const session = require('express-session');
 const connectDB = require("./config/database");
 const User = require("./models/user");
 const bcrypt = require("bcrypt");
-
-require("dotenv").config();
-
 const app = express();
 const server = require("http").createServer(app);
 const io = require("socket.io")(server);
@@ -40,12 +36,10 @@ app.get("/", (req, res) => {
   res.render("login");
 });
 
-// Show login page
 app.get("/login", (req, res) => {
   res.render("login");
 });
 
-// Show signup page
 app.get("/signup", (req, res) => {
   res.render("signup");
 });
@@ -72,7 +66,28 @@ app.get("/meeting-room", (req, res) => {
 
 
 
-// Handle signup form submission
+// it is old room btn home
+app.get("/home", (req, res) => {
+  res.render("home");
+});
+
+//Create meeting room
+app.get("/create-room", (req, res) => {
+  res.render("create-room");
+});
+
+//join meeting by link and password
+app.get("/join-meeting", (req, res) => {
+  res.render("join-meeting");
+});
+
+//joining meeting room by entering name
+app.get("/meeting-room", (req, res) => {
+  res.render("meeting-room");
+});
+
+
+
 app.post("/signup", async (req, res) => {
   const { username, password } = req.body;
   const hashedPassword = await bcrypt.hash(password, 10);
@@ -86,7 +101,6 @@ app.post("/signup", async (req, res) => {
   }
 });  
 
-// Handle login form submission
 app.post("/login", async (req, res) => {
   const { username, password } = req.body;
   const user = await User.findOne({ username });
@@ -110,12 +124,12 @@ app.get("/logout", (req, res) => {
 
 
 
-// Handle button click to join room
+
+
 app.get("/room", (req, res) => {
   res.redirect(`/${uuidV4()}`);
 });
 
-// Main room route
 app.get("/:room", (req, res) => {
   res.render("room", { roomId: req.params.room });
 });
@@ -128,9 +142,12 @@ io.on("connection", (socket) => {
     socket.join(roomId);
     socket.to(roomId).emit("user-connected", userId);
 
-    // Handle speech recognition results
-    socket.on("speech-result", (roomId, text) => {
-      socket.to(roomId).emit("remote-speech", text);
+    socket.on("speech-result", (roomId, data) => {
+      socket.to(roomId).emit("remote-speech", data);
+    });
+
+    socket.on("language-change", (roomId, newLang) => {
+      socket.to(roomId).emit("language-change", newLang);
     });
 
     socket.on("disconnect", () => {

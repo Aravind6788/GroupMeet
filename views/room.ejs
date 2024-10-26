@@ -3,75 +3,251 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <script>
-        const ROOM_ID = "<%= roomId %>" || 'test-room'; // Default to 'test-room'
-    </script>
-    <script defer src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
-    <script src="/socket.io/socket.io.js" defer></script>
-    <script src="/speechRecognition.js" defer></script>
-    <script src="script.js" defer></script>
-    <title>Document</title>
+    <title>Video Chat Room</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
     <style>
-        #video-grid {
+        body {
+            margin: 0;
+            padding: 20px;
+            background-color: #f0f2f5;
+            font-family: Arial, sans-serif;
+        }
+
+        .main-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        .video-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, 300px);
-            grid-auto-rows: 300px;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            padding: 20px;
+            flex-grow: 1;
+        }
+
+        .video-container {
+            position: relative;
+            background-color: #000;
+            border-radius: 10px;
+            overflow: hidden;
+            aspect-ratio: 16/9;
         }
 
         video {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 8px;
         }
-        
-        body {
-            font-family: Arial, sans-serif;
-            margin: 0;
-            padding: 20px;
-            background-color: #f4f4f4;
-        }
-        h1 {
-            text-align: center;
-        }
-        #output, #remote-captions {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            min-height: 50px;
-        }
-        .caption-container {
+
+        .controls-container {
             position: fixed;
-            bottom: 20px;
+            bottom: 0;
             left: 0;
             right: 0;
+            background-color: rgba(255, 255, 255, 0.9);
+            padding: 15px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 20px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
             z-index: 1000;
-            text-align: center;
         }
+
+        .control-button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: all 0.3s ease;
+        }
+
+        .control-button:hover {
+            transform: translateY(-2px);
+        }
+
+        .mute-button {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .video-button {
+            background-color: #007bff;
+            color: white;
+        }
+
+        .leave-button {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .status-indicator {
+            background-color: #f8f9fa;
+            border: 1px solid #ddd;
+            padding: 8px 15px;
+            border-radius: 20px;
+            font-size: 14px;
+            color: #666;
+            animation: pulse 2s infinite;
+        }
+
+        .language-selector {
+            padding: 8px 15px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            background-color: white;
+            font-size: 14px;
+            cursor: pointer;
+        }
+
+        .caption-container {
+            position: fixed;
+            bottom: 80px;
+            left: 0;
+            right: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            z-index: 900;
+        }
+
         .caption {
             background-color: rgba(0, 0, 0, 0.7);
-            color: black;
-            padding: 10px;
-            margin: 5px auto;
+            color: white;
+            padding: 10px 20px;
+            border-radius: 20px;
             max-width: 80%;
-            border-radius: 5px;
-            min-height: 30px;
+            text-align: center;
+            font-size: 16px;
+            transition: opacity 0.3s ease;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .video-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .controls-container {
+                flex-wrap: wrap;
+            }
+
+            .control-button {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
         }
     </style>
+    <script>
+        const ROOM_ID = "<%= roomId %>";
+    </script>
+    <script defer src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+    <script src="/socket.io/socket.io.js" defer></script>
+    <script src="script.js" defer></script>
+    <script src="speechRecognition.js" defer></script>
 </head>
 <body>
+    <div class="main-container">
+        <div class="video-grid" id="video-grid"></div>
 
-    <h1>Meet Speech Recognition</h1>
-    <button id="start-btn">Start Recognition</button>
-    
-    
-    
-    <div class="caption-container">
-        <div id="output" class="caption">Speech will appear here...</div>
-        <div id="remote-captions" class="caption">Remote participant captions...</div>
+        <div class="caption-container">
+            <div id="output" class="caption">Waiting for speech...</div>
+            <div id="remote-captions" class="caption"></div>
+        </div>
+
+        <div class="controls-container">
+            <select id="language-select" class="language-selector">
+                <option value="en-US">English (US)</option>
+                <option value="ta-IN">Tamil (India)</option>
+                <option value="hi-IN">Hindi (India)</option>
+                <option value="ja-JP">Japanese</option>
+                <option value="ko-KR">Korean</option>
+                <option value="zh-CN">Chinese (Simplified)</option>
+                <option value="es-ES">Spanish</option>
+                <option value="fr-FR">French</option>
+                <option value="de-DE">German</option>
+                <option value="it-IT">Italian</option>
+            </select>
+
+            <button class="control-button mute-button" id="muteButton">
+                <i class="fas fa-microphone"></i>
+                Mute
+            </button>
+
+            <button class="control-button video-button" id="videoButton">
+                <i class="fas fa-video"></i>
+                Stop Video
+            </button>
+
+            <button class="control-button leave-button" id="leaveButton">
+                <i class="fas fa-phone-slash"></i>
+                Leave Meeting
+            </button>
+
+            <div class="status-indicator">Initializing...</div>
+        </div>
     </div>
 
-    <div id="video-grid"></div>
-    
+    <!-- Font Awesome for icons -->
+    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
+
+    <!-- Bootstrap JS and dependencies -->
+    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+
+    <script>
+        // Handle mute button
+        const muteButton = document.getElementById('muteButton');
+        muteButton.addEventListener('click', () => {
+            const enabled = myVideoStream.getAudioTracks()[0].enabled;
+            if (enabled) {
+                myVideoStream.getAudioTracks()[0].enabled = false;
+                muteButton.innerHTML = `<i class="fas fa-microphone-slash"></i> Unmute`;
+                muteButton.classList.add('active');
+            } else {
+                myVideoStream.getAudioTracks()[0].enabled = true;
+                muteButton.innerHTML = `<i class="fas fa-microphone"></i> Mute`;
+                muteButton.classList.remove('active');
+            }
+        });
+
+        // Handle video button
+        const videoButton = document.getElementById('videoButton');
+        videoButton.addEventListener('click', () => {
+            const enabled = myVideoStream.getVideoTracks()[0].enabled;
+            if (enabled) {
+                myVideoStream.getVideoTracks()[0].enabled = false;
+                videoButton.innerHTML = `<i class="fas fa-video-slash"></i> Start Video`;
+                videoButton.classList.add('active');
+            } else {
+                myVideoStream.getVideoTracks()[0].enabled = true;
+                videoButton.innerHTML = `<i class="fas fa-video"></i> Stop Video`;
+                videoButton.classList.remove('active');
+            }
+        });
+
+        // Handle leave button
+        const leaveButton = document.getElementById('leaveButton');
+        leaveButton.addEventListener('click', () => {
+            socket.emit('leave', ROOM_ID);
+            window.location.href = '/';
+        });
+    </script>
 </body>
 </html>
