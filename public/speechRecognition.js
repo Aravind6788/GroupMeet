@@ -4,13 +4,45 @@ const SpeechRecognition =
 if (SpeechRecognition) {
   const recognition = new SpeechRecognition();
   const output = document.getElementById("output");
-  recognition.lang = "ta-IN";
+  const languageSelect = document.getElementById("language-select");
+  const startBtn = document.getElementById("start-btn");
+
+  // Initial language setting
+  recognition.lang = languageSelect.value;
   recognition.interimResults = true;
   recognition.maxAlternatives = 1;
 
   let isRecognizing = false;
   let audioContext;
   let mediaStreamSource;
+
+  // Language selection handler
+  languageSelect.addEventListener("change", () => {
+    const newLang = languageSelect.value;
+    recognition.lang = newLang;
+
+    // Restart recognition with new language
+    if (isRecognizing) {
+      recognition.stop();
+      setTimeout(() => {
+        startRecognition();
+      }, 100);
+    }
+
+    // Emit language change to other participants
+    socket.emit("language-change", ROOM_ID, newLang);
+  });
+
+  // Start/Stop button handler
+  startBtn.addEventListener("click", () => {
+    if (isRecognizing) {
+      recognition.stop();
+      startBtn.textContent = "Start Recognition";
+    } else {
+      startRecognition();
+      startBtn.textContent = "Stop Recognition";
+    }
+  });
 
   // Listen for the audio stream from video call
   window.addEventListener("audioStreamReady", (event) => {
@@ -24,58 +56,28 @@ if (SpeechRecognition) {
   });
 
   function startRecognition() {
-    if (!isRecognizing) {
-      try {
-        recognition.start();
-      } catch (error) {
-        console.log("Recognition already started");
-      }
-    }
+    isRecognizing = true;
+    recognition.start();
   }
 
-  recognition.onstart = () => {
-    console.log("Speech recognition started");
-    isRecognizing = true;
-  };
-
   recognition.onresult = (event) => {
-    const results = event.results;
-    const speechResult = results[results.length - 1][0].transcript;
-    output.innerText = `${speechResult}`;
+    const transcript = event.results[0][0].transcript;
+    output.textContent = transcript;
 
-    // Emit the speech result to other participants
-    socket.emit("speech-result", ROOM_ID, speechResult);
-
-    setTimeout(() => {
-      output.innerText = "";
-    }, 3000);
+    // Emit speech result to other participants
+    socket.emit("speech-result", ROOM_ID, {
+      text: transcript,
+      language: recognition.lang,
+    });
   };
 
-  recognition.onspeechend = () => {
-    console.log("Speech ended");
+  recognition.onend = () => {
     isRecognizing = false;
-    recognition.stop();
   };
 
   recognition.onerror = (event) => {
-    console.log("Error occurred in recognition:", event.error);
-    isRecognizing = false;
-
-    if (event.error === "no-speech" || event.error === "aborted") {
-      recognition.stop();
-      setTimeout(startRecognition, 1000);
-    }
+    console.error("Speech recognition error:", event);
   };
-
-  // Check recognition status every second
-  setInterval(() => {
-    if (!isRecognizing) {
-      startRecognition();
-    }
-  }, 1000);
-
-  // Add language selector functionality if needed
 } else {
-  document.getElementById("output").innerText =
-    "Sorry, your browser does not support Speech Recognition.";
+  console.log("Speech recognition not supported");
 }

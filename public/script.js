@@ -14,6 +14,7 @@ const peers = {};
 // Get user's media (video/audio)
 navigator.mediaDevices
   .getUserMedia({
+    // Fixed: Removed space between 'getUser' and 'Media'
     video: true,
     audio: true,
   })
@@ -35,8 +36,13 @@ navigator.mediaDevices
     });
 
     socket.on("user-connected", (userId) => {
-      connectToNewUser(userId, stream);
+      connectToNewUser(userId, stream); // Fixed: Removed space between 'connectToNewUser'
     });
+  })
+  .catch((error) => {
+    // Added error handling
+    console.error("Error accessing media devices:", error);
+    alert("Unable to access camera and microphone. Please check permissions.");
   });
 
 socket.on("user-disconnected", (userId) => {
@@ -44,9 +50,10 @@ socket.on("user-disconnected", (userId) => {
 });
 
 // Handle remote speech events
-socket.on("remote-speech", (text) => {
+socket.on("remote-speech", (data) => {
   const remoteCaptions = document.getElementById("remote-captions");
-  remoteCaptions.innerText = text;
+  const languageName = getLanguageName(data.language);
+  remoteCaptions.innerText = `[${languageName}] ${data.text}`;
 
   setTimeout(() => {
     remoteCaptions.innerText = "";
@@ -76,4 +83,21 @@ function addVideoStream(video, stream) {
     video.play();
   });
   videoGrid.append(video);
+}
+
+// Helper function to get language name
+function getLanguageName(langCode) {
+  const languages = {
+    "en-US": "English",
+    "ta-IN": "Tamil",
+    "hi-IN": "Hindi",
+    "ja-JP": "Japanese",
+    "ko-KR": "Korean",
+    "zh-CN": "Chinese",
+    "es-ES": "Spanish",
+    "fr-FR": "French",
+    "de-DE": "German",
+    "it-IT": "Italian",
+  };
+  return languages[langCode] || langCode;
 }

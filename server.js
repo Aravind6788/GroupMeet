@@ -1,4 +1,3 @@
-// server.js
 const express = require("express");
 const mongoose = require("mongoose");
 const connectDB = require("./config/database");
@@ -84,8 +83,13 @@ io.on("connection", (socket) => {
     socket.to(roomId).emit("user-connected", userId);
 
     // Handle speech recognition results
-    socket.on("speech-result", (roomId, text) => {
-      socket.to(roomId).emit("remote-speech", text);
+    socket.on("speech-result", (roomId, data) => {
+      socket.to(roomId).emit("remote-speech", data);
+    });
+
+    // Handle language changes
+    socket.on("language-change", (roomId, newLang) => {
+      socket.to(roomId).emit("language-change", newLang);
     });
 
     socket.on("disconnect", () => {

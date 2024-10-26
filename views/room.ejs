@@ -4,24 +4,27 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script>
-        const ROOM_ID = "<%= roomId %>" || 'test-room'; // Default to 'test-room'
+        const ROOM_ID = "<%= roomId %>" || 'test-room';
     </script>
     <script defer src="https://unpkg.com/peerjs@1.2.0/dist/peerjs.min.js"></script>
     <script src="/socket.io/socket.io.js" defer></script>
     <script src="/speechRecognition.js" defer></script>
     <script src="script.js" defer></script>
-    <title>Document</title>
+    <title>Video Meeting with Speech Recognition</title>
     <style>
         #video-grid {
             display: grid;
             grid-template-columns: repeat(auto-fill, 300px);
             grid-auto-rows: 300px;
+            gap: 10px;
+            margin-top: 20px;
         }
 
         video {
             width: 100%;
             height: 100%;
             object-fit: cover;
+            border-radius: 10px;
         }
         
         body {
@@ -30,16 +33,54 @@
             padding: 20px;
             background-color: #f4f4f4;
         }
+
         h1 {
             text-align: center;
+            color: #333;
         }
-        #output, #remote-captions {
-            margin-top: 20px;
-            padding: 10px;
-            background-color: #fff;
-            border: 1px solid #ddd;
-            min-height: 50px;
+
+        .controls-container {
+            text-align: center;
+            margin: 20px 0;
         }
+
+        .language-selector {
+            padding: 8px 12px;
+            font-size: 16px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            margin: 10px auto;
+            display: block;
+            width: 200px;
+            background-color: white;
+        }
+
+        .language-selector:focus {
+            border-color: #007bff;
+            outline: none;
+        }
+
+        #start-btn {
+            background-color: #007bff;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+            font-size: 16px;
+        }
+
+        #start-btn:hover {
+            background-color: #0056b3;
+        }
+
+        .status-indicator {
+            margin-top: 10px;
+            font-size: 14px;
+            color: #666;
+        }
+
         .caption-container {
             position: fixed;
             bottom: 20px;
@@ -48,9 +89,10 @@
             z-index: 1000;
             text-align: center;
         }
+
         .caption {
             background-color: rgba(0, 0, 0, 0.7);
-            color: black;
+            color: white;
             padding: 10px;
             margin: 5px auto;
             max-width: 80%;
@@ -60,11 +102,23 @@
     </style>
 </head>
 <body>
-
-    <h1>Meet Speech Recognition</h1>
-    <button id="start-btn">Start Recognition</button>
+    <h1>Video Meeting with Speech Recognition</h1>
     
-    
+    <div class="controls-container">
+        <select id="language-select" class="language-selector">
+            <option value="en-US">English (US)</option>
+            <option value="ta-IN">Tamil (India)</option>
+            <option value="hi-IN">Hindi (India)</option>
+            <option value="ja-JP">Japanese</option>
+            <option value="ko-KR">Korean</option>
+            <option value="zh-CN">Chinese (Simplified)</option>
+            <option value="es-ES">Spanish</option>
+            <option value="fr-FR">French</option>
+            <option value="de-DE">German</option>
+            <option value="it-IT">Italian</option>
+        </select>
+        <button id="start-btn">Start Recognition</button>
+    </div>
     
     <div class="caption-container">
         <div id="output" class="caption">Speech will appear here...</div>
@@ -72,6 +126,5 @@
     </div>
 
     <div id="video-grid"></div>
-    
 </body>
 </html>
