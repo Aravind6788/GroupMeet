@@ -47,11 +47,13 @@
                     <div id="output" class="caption text-sm text-gray-700">Live Captions</div>
                     <div id="remote-captions" class="caption text-sm text-gray-700">Remote Captions</div>
                     
-                    <!-- Translation Box -->
+                    <!-- Translation Box for Remote Captions -->
                     <div class="translation-box bg-gray-100 p-3 rounded-lg">
                         <div class="flex justify-between items-center mb-2">
-                            <span class="text-sm font-medium">Translation</span>
+                            <span class="text-sm font-medium">Translation for Remote Captions</span>
                             <select id="translation-language" class="text-sm bg-white rounded px-2 py-1">
+                                <option value="en">English</option>
+                                <option value="ta">Tamil</option>
                                 <option value="es">Spanish</option>
                                 <option value="fr">French</option>
                                 <option value="de">German</option>
@@ -63,71 +65,54 @@
                         </div>
                         <div id="translated-captions" class="text-sm text-gray-700 min-h-[2rem]"></div>
                     </div>
+
+                    <!-- Translation Box for User's Own Captions -->
+                    <div class="translation-box bg-gray-100 p-3 rounded-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-medium">Translation for Your Captions</span>
+                            <select id="your-translation-language" class="text-sm bg-white rounded px-2 py-1">
+                                <option value="en">English</option>
+                                <option value="ta">Tamil</option>
+                                <option value="es">Spanish</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                                <option value="hi">Hindi</option>
+                                <option value="ja">Japanese</option>
+                                <option value="ko">Korean</option>
+                                <option value="zh">Chinese</option>
+                            </select>
+                        </div>
+                        <div id="your-translated-captions" class="text-sm text-gray-700 min-h-[2rem]"></div>
+                    </div>
                 </div>
             </div>
         </div>
 
         <!-- Controls -->
         <div class="mt-4 flex items-center justify-center gap-4 py-4">
-            <button class="control-button p-4 rounded-full bg-gray-200 hover:bg-gray-300" id="muteButton">
-                <i data-lucide="mic" class="h-6 w-6"></i>
+            <button class="control-button p-4 rounded-full bg-gray-200 hover:bg-gray-300" id ="start-button">
+                <i data-lucide="microphone" class="h-5 w-5"></i>
             </button>
-
-            <button class="control-button p-4 rounded-full bg-gray-200 hover:bg-gray-300" id="videoButton">
-                <i data-lucide="video" class="h-6 w-6"></i>
-            </button>
-
-            <button class="control-button p-4 rounded-full bg-gray-200 hover:bg-gray-300" id="screenShareButton">
-                <i data-lucide="monitor" class="h-6 w-6"></i>
-            </button>
-
-            <button class="control-button p-4 rounded-full bg-gray-200 hover:bg-gray-300" id="layoutButton">
-                <i data-lucide="layout-grid" class="h-6 w-6"></i>
-            </button>
-
-            <button class="control-button px-6 py-3 bg-red-500 text-white rounded-full hover:bg-red-600" id="leaveButton">
-                End Call
+            <button class="control-button p-4 rounded-full bg-gray-200 hover:bg-gray-300" id="stop-button">
+                <i data-lucide="microphone-off" class="h-5 w-5"></i>
             </button>
         </div>
     </div>
 
-    <!-- Right Sidebar -->
-    <div class="w-80 bg-white rounded-lg shadow-sm flex flex-col">
-        <!-- Tabs -->
-        <div class="flex border-b">
-            <button class="flex-1 py-3 text-center font-medium border-b-2 border-blue-500" id="participantsTab">
-                Participants
-            </button>
-            <button class="flex-1 py-3 text-center text-gray-500" id="chatTab">
-                Chat
-            </button>
-        </div>
-
-        <!-- Participants Section -->
-        <div class="participants-section">
-            <div class="p-4 space-y-4" id="participantsList">
-                <!-- Participants will be added dynamically -->
-            </div>
-        </div>
-
-        <!-- Chat Section -->
-        <div class="chat-section hidden flex-grow flex flex-col">
-            <div class="flex-grow overflow-y-auto p-4" id="chatMessages">
+    <!-- Right Side - Chat Area -->
+    <div class="w-64 flex-shrink-0 flex flex-col">
+        <div class="flex-grow overflow-y-auto p-4">
+            <div class="chat-log space-y-2">
                 <!-- Chat messages will be added dynamically -->
             </div>
+        </div>
 
-            <!-- Chat Input -->
-            <div class="p-4 border-t">
-                <div class="flex items-center gap-2">
-                    <input type="text" 
-                           id="chatInput"
-                           class="flex-grow p-2 border rounded-lg focus:outline-none focus:border-blue-500"
-                           placeholder="Type a message...">
-                    <button id="sendMessage" class="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
-                        <i data-lucide="send" class="h-5 w-5"></i>
-                    </button>
-                </div>
-            </div>
+        <!-- Chat Input -->
+        <div class="p-4">
+            <input type="text" id="chat-input" class="w-full p-2 rounded-lg" placeholder="Type a message...">
+            <button class="p-2 rounded-full bg-gray-200 hover:bg-gray-300" id="send-button">
+                <i data-lucide="paper-airplane" class="h-5 w-5"></i>
+            </button>
         </div>
     </div>
 </main>
