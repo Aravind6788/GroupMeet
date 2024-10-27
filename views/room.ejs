@@ -1,253 +1,172 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Video Chat Room</title>
-    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
-    <style>
-        body {
-            margin: 0;
-            padding: 20px;
-            background-color: #f0f2f5;
-            font-family: Arial, sans-serif;
-        }
+<%- include('partials/head') %>
+<body class="bg-gray-50">
 
-        .main-container {
-            display: flex;
-            flex-direction: column;
-            height: 100vh;
-        }
+<%- include('partials/nav') %>
 
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 20px;
-            padding: 20px;
-            flex-grow: 1;
-        }
-
-        .video-container {
-            position: relative;
-            background-color: #000;
-            border-radius: 10px;
-            overflow: hidden;
-            aspect-ratio: 16/9;
-        }
-
-        video {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 8px;
-        }
-
-        .controls-container {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            background-color: rgba(255, 255, 255, 0.9);
-            padding: 15px;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 20px;
-            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
-            z-index: 1000;
-        }
-
-        .control-button {
-            padding: 10px 20px;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            font-size: 16px;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            transition: all 0.3s ease;
-        }
-
-        .control-button:hover {
-            transform: translateY(-2px);
-        }
-
-        .mute-button {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .video-button {
-            background-color: #007bff;
-            color: white;
-        }
-
-        .leave-button {
-            background-color: #dc3545;
-            color: white;
-        }
-
-        .status-indicator {
-            background-color: #f8f9fa;
-            border: 1px solid #ddd;
-            padding: 8px 15px;
-            border-radius: 20px;
-            font-size: 14px;
-            color: #666;
-            animation: pulse 2s infinite;
-        }
-
-        .language-selector {
-            padding: 8px 15px;
-            border-radius: 20px;
-            border: 1px solid #ddd;
-            background-color: white;
-            font-size: 14px;
-            cursor: pointer;
-        }
-
-        .caption-container {
-            position: fixed;
-            bottom: 80px;
-            left: 0;
-            right: 0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            gap: 10px;
-            padding: 10px;
-            z-index: 900;
-        }
-
-        .caption {
-            background-color: rgba(0, 0, 0, 0.7);
-            color: white;
-            padding: 10px 20px;
-            border-radius: 20px;
-            max-width: 80%;
-            text-align: center;
-            font-size: 16px;
-            transition: opacity 0.3s ease;
-        }
-
-        @keyframes pulse {
-            0% { opacity: 1; }
-            50% { opacity: 0.6; }
-            100% { opacity: 1; }
-        }
-
-        /* Responsive Design */
-        @media (max-width: 768px) {
-            .video-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .controls-container {
-                flex-wrap: wrap;
-            }
-
-            .control-button {
-                padding: 8px 15px;
-                font-size: 14px;
-            }
-        }
-    </style>
-    <script>
-        const ROOM_ID = "<%= roomId %>";
-    </script>
-    <script defer src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
-    <script src="/socket.io/socket.io.js" defer></script>
-    <script src="script.js" defer></script>
-    <script src="speechRecognition.js" defer></script>
-</head>
-<body>
-    <div class="main-container">
-        <div class="video-grid" id="video-grid"></div>
-
-        <div class="caption-container">
-            <div id="output" class="caption">Waiting for speech...</div>
-            <div id="remote-captions" class="caption"></div>
+<main class="container mx-auto p-4 flex gap-4 h-screen">
+    <!-- Left Side - Video Area -->
+    <div class="flex-grow flex flex-col">
+        <!-- Title -->
+        <div class="mb-4 flex items-center justify-between">
+            <div>
+                <h1 class="text-xl font-semibold">Video Chat Room</h1>
+                <p class="text-sm text-gray-500" id="meeting-time">Active Meeting</p>
+            </div>
+            <!-- Meeting Controls -->
+            <div class="flex items-center gap-2">
+                <button class="p-2 rounded-full bg-gray-200">
+                    <i data-lucide="users-plus" class="h-5 w-5"></i>
+                </button>
+                <select id="language-select" class="language-selector bg-gray-200 rounded-full px-4 py-2">
+                    <option value="en-US">English (US)</option>
+                    <option value="ta-IN">Tamil (India)</option>
+                    <option value="hi-IN">Hindi (India)</option>
+                    <option value="ja-JP">Japanese</option>
+                    <option value="ko-KR">Korean</option>
+                    <option value="zh-CN">Chinese (Simplified)</option>
+                    <option value="es-ES">Spanish</option>
+                    <option value="fr-FR">French</option>
+                    <option value="de-DE">German</option>
+                    <option value="it-IT">Italian</option>
+                </select>
+            </div>
         </div>
 
-        <div class="controls-container">
-            <select id="language-select" class="language-selector">
-                <option value="en-US">English (US)</option>
-                <option value="ta-IN">Tamil (India)</option>
-                <option value="hi-IN">Hindi (India)</option>
-                <option value="ja-JP">Japanese</option>
-                <option value="ko-KR">Korean</option>
-                <option value="zh-CN">Chinese (Simplified)</option>
-                <option value="es-ES">Spanish</option>
-                <option value="fr-FR">French</option>
-                <option value="de-DE">German</option>
-                <option value="it-IT">Italian</option>
-            </select>
+        <!-- Main Content Area -->
+        <div class="flex-grow flex">
+            <!-- Video Grid -->
+            <div class="flex-grow">
+                <div class="video-grid grid grid-cols-2 gap-4" id="video-grid">
+                    <!-- Videos will be added dynamically -->
+                </div>
 
-            <button class="control-button mute-button" id="muteButton">
-                <i class="fas fa-microphone"></i>
-                Mute
+                <!-- Captions -->
+                <div class="captions mt-4 space-y-2">
+                    <div id="output" class="caption text-sm text-gray-700">Live Captions</div>
+                    <div id="remote-captions" class="caption text-sm text-gray-700">Remote Captions</div>
+                    
+                    <!-- Translation Box -->
+                    <div class="translation-box bg-gray-100 p-3 rounded-lg">
+                        <div class="flex justify-between items-center mb-2">
+                            <span class="text-sm font-medium">Translation</span>
+                            <select id="translation-language" class="text-sm bg-white rounded px-2 py-1">
+                                <option value="es">Spanish</option>
+                                <option value="fr">French</option>
+                                <option value="de">German</option>
+                                <option value="hi">Hindi</option>
+                                <option value="ja">Japanese</option>
+                                <option value="ko">Korean</option>
+                                <option value="zh">Chinese</option>
+                            </select>
+                        </div>
+                        <div id="translated-captions" class="text-sm text-gray-700 min-h-[2rem]"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controls -->
+        <div class="mt-4 flex items-center justify-center gap-4 py-4">
+            <button class="control-button p-4 rounded-full bg-gray-200 hover:bg-gray-300" id="muteButton">
+                <i data-lucide="mic" class="h-6 w-6"></i>
             </button>
 
-            <button class="control-button video-button" id="videoButton">
-                <i class="fas fa-video"></i>
-                Stop Video
+            <button class="control-button p-4 rounded-full bg-gray-200 hover:bg-gray-300" id="videoButton">
+                <i data-lucide="video" class="h-6 w-6"></i>
             </button>
 
-            <button class="control-button leave-button" id="leaveButton">
-                <i class="fas fa-phone-slash"></i>
-                Leave Meeting
+            <button class="control-button p-4 rounded-full bg-gray-200 hover:bg-gray-300" id="screenShareButton">
+                <i data-lucide="monitor" class="h-6 w-6"></i>
             </button>
 
-            <div class="status-indicator">Initializing...</div>
+            <button class="control-button p-4 rounded-full bg-gray-200 hover:bg-gray-300" id="layoutButton">
+                <i data-lucide="layout-grid" class="h-6 w-6"></i>
+            </button>
+
+            <button class="control-button px-6 py-3 bg-red-500 text-white rounded-full hover:bg-red-600" id="leaveButton">
+                End Call
+            </button>
         </div>
     </div>
 
-    <!-- Font Awesome for icons -->
-    <script src="https://kit.fontawesome.com/your-font-awesome-kit.js" crossorigin="anonymous"></script>
+    <!-- Right Sidebar -->
+    <div class="w-80 bg-white rounded-lg shadow-sm flex flex-col">
+        <!-- Tabs -->
+        <div class="flex border-b">
+            <button class="flex-1 py-3 text-center font-medium border-b-2 border-blue-500" id="participantsTab">
+                Participants
+            </button>
+            <button class="flex-1 py-3 text-center text-gray-500" id="chatTab">
+                Chat
+            </button>
+        </div>
 
-    <!-- Bootstrap JS and dependencies -->
-    <script src="https://code.jquery.com/jquery-3.5.1.slim.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.5.4/dist/umd/popper.min.js"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/js/bootstrap.min.js"></script>
+        <!-- Participants Section -->
+        <div class="participants-section">
+            <div class="p-4 space-y-4" id="participantsList">
+                <!-- Participants will be added dynamically -->
+            </div>
+        </div>
 
-    <script>
-        // Handle mute button
-        const muteButton = document.getElementById('muteButton');
-        muteButton.addEventListener('click', () => {
-            const enabled = myVideoStream.getAudioTracks()[0].enabled;
-            if (enabled) {
-                myVideoStream.getAudioTracks()[0].enabled = false;
-                muteButton.innerHTML = `<i class="fas fa-microphone-slash"></i> Unmute`;
-                muteButton.classList.add('active');
-            } else {
-                myVideoStream.getAudioTracks()[0].enabled = true;
-                muteButton.innerHTML = `<i class="fas fa-microphone"></i> Mute`;
-                muteButton.classList.remove('active');
-            }
-        });
+        <!-- Chat Section -->
+        <div class="chat-section hidden flex-grow flex flex-col">
+            <div class="flex-grow overflow-y-auto p-4" id="chatMessages">
+                <!-- Chat messages will be added dynamically -->
+            </div>
 
-        // Handle video button
-        const videoButton = document.getElementById('videoButton');
-        videoButton.addEventListener('click', () => {
-            const enabled = myVideoStream.getVideoTracks()[0].enabled;
-            if (enabled) {
-                myVideoStream.getVideoTracks()[0].enabled = false;
-                videoButton.innerHTML = `<i class="fas fa-video-slash"></i> Start Video`;
-                videoButton.classList.add('active');
-            } else {
-                myVideoStream.getVideoTracks()[0].enabled = true;
-                videoButton.innerHTML = `<i class="fas fa-video"></i> Stop Video`;
-                videoButton.classList.remove('active');
-            }
-        });
+            <!-- Chat Input -->
+            <div class="p-4 border-t">
+                <div class="flex items-center gap-2">
+                    <input type="text" 
+                           id="chatInput"
+                           class="flex-grow p-2 border rounded-lg focus:outline-none focus:border-blue-500"
+                           placeholder="Type a message...">
+                    <button id="sendMessage" class="p-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600">
+                        <i data-lucide="send" class="h-5 w-5"></i>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+</main>
 
-        // Handle leave button
-        const leaveButton = document.getElementById('leaveButton');
-        leaveButton.addEventListener('click', () => {
-            socket.emit('leave', ROOM_ID);
-            window.location.href = '/';
-        });
-    </script>
+<!-- Scripts -->
+<script>
+    const ROOM_ID = "<%= roomId %>";
+</script>
+<script defer src="https://unpkg.com/peerjs@1.4.7/dist/peerjs.min.js"></script>
+<script src="/socket.io/socket.io.js" defer></script>
+<script src="script.js" defer></script>
+<script src="speechRecognition.js" defer></script>
+<script src="chat.js" defer></script>
+
+<script>
+    // Tab switching logic
+    const participantsTab = document.getElementById('participantsTab');
+    const chatTab = document.getElementById('chatTab');
+    const participantsSection = document.querySelector('.participants-section');
+    const chatSection = document.querySelector('.chat-section');
+
+    participantsTab.addEventListener('click', () => {
+        participantsSection.classList.remove('hidden');
+        chatSection.classList.add('hidden');
+        participantsTab.classList.add('border-b-2', 'border-blue-500');
+        participantsTab.classList.remove('text-gray-500');
+        chatTab.classList.remove('border-b-2', 'border-blue-500');
+        chatTab.classList.add('text-gray-500');
+    });
+
+    chatTab.addEventListener('click', () => {
+        participantsSection.classList.add('hidden');
+        chatSection.classList.remove('hidden');
+        chatTab.classList.add('border-b-2', 'border-blue-500');
+        chatTab.classList.remove('text-gray-500');
+        participantsTab.classList.remove('border-b-2', 'border-blue-500');
+        participantsTab.classList.add('text-gray-500');
+    });
+</script>
+
 </body>
 </html>
