@@ -22,7 +22,7 @@
                 const text = document.getElementById('textInput').value;
                 const targetLang = document.getElementById('langSelect').value;
 
-                fetch('http://localhost:5000/translate', {
+                fetch('https://python-speech-reco-server.onrender.com/translate', {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
