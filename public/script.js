@@ -29,6 +29,13 @@ navigator.mediaDevices
       call.on("stream", (userVideoStream) => {
         addVideoStream(video, userVideoStream);
       });
+
+      // Setup data channel for incoming calls
+      if (call.peerConnection) {
+        call.peerConnection.ondatachannel = (event) => {
+          setupDataChannel(event.channel);
+        };
+      }
     });
 
     // Handle new users
@@ -40,7 +47,6 @@ navigator.mediaDevices
 // Handle peer connection
 myPeer.on("open", (id) => {
   socket.emit("join-room", ROOM_ID, id);
-  // Initialize chat manager
   window.chatManager = new ChatManager(id, socket, ROOM_ID);
 });
 
@@ -48,6 +54,51 @@ myPeer.on("open", (id) => {
 socket.on("user-disconnected", (userId) => {
   if (peers[userId]) peers[userId].close();
 });
+
+// Caption sharing functionality
+function sendCaptions(caption) {
+  for (let peerId in peers) {
+    const peerConnection = peers[peerId];
+    if (peerConnection.peerConnection) {
+      if (!peerConnection.dataChannel) {
+        peerConnection.dataChannel =
+          peerConnection.peerConnection.createDataChannel("captions");
+        setupDataChannel(peerConnection.dataChannel);
+      }
+
+      try {
+        peerConnection.dataChannel.send(
+          JSON.stringify({
+            type: "caption",
+            text: caption,
+            userId: myPeer.id,
+          })
+        );
+      } catch (error) {
+        console.error("Error sending caption:", error);
+      }
+    }
+  }
+}
+
+// Setup data channel handlers
+function setupDataChannel(dataChannel) {
+  dataChannel.onmessage = (event) => {
+    try {
+      const data = JSON.parse(event.data);
+      if (data.type === "caption") {
+        const remoteCaptions = document.getElementById("remote-captions");
+        remoteCaptions.textContent = `${data.text}`;
+      }
+    } catch (error) {
+      console.error("Error processing received caption:", error);
+    }
+  };
+
+  dataChannel.onerror = (error) => {
+    console.error("Data channel error:", error);
+  };
+}
 
 // Connect to new user
 function connectToNewUser(userId, stream) {
@@ -61,6 +112,13 @@ function connectToNewUser(userId, stream) {
   call.on("close", () => {
     video.remove();
   });
+
+  // Setup peer connection for captions
+  if (call.peerConnection) {
+    call.peerConnection.ondatachannel = (event) => {
+      setupDataChannel(event.channel);
+    };
+  }
 
   peers[userId] = call;
 }
@@ -114,3 +172,65 @@ socket.on("chat-message", (message) => {
     chatManager.receiveChatMessage(message);
   }
 });
+
+// Connect speech recognition to caption sharing
+if (typeof recognition !== "undefined") {
+  recognition.onresult = async (event) => {
+    lastRecognitionTimestamp = Date.now();
+    const current = event.resultIndex;
+    const transcript = event.results[current][0].transcript;
+
+    output.textContent = transcript;
+
+    // Send captions to other participants
+    sendCaptions(transcript);
+
+    if (event.results[current].isFinal) {
+      const targetLang = document.getElementById("translation-language").value;
+      const translatedText = await translateText(transcript, targetLang);
+      document.getElementById("translated-captions").textContent =
+        translatedText;
+
+      const remoteCaptions =
+        document.getElementById("remote-captions").textContent;
+      const remoteTargetLang = document.getElementById(
+        "remote-translation-language"
+      ).value;
+      const remoteTranslatedText = await translateText(
+        remoteCaptions,
+        remoteTargetLang
+      );
+      document.getElementById("remote-translated-captions").textContent =
+        remoteTranslatedText;
+    }
+  };
+}
+
+// Translation function
+async function translateText(text, targetLang) {
+  try {
+    const response = await fetch(
+      "https://python-speech-reco-server.onrender.com/translate",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: text,
+          target_lang: targetLang,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.translation || "";
+  } catch (error) {
+    console.error("Translation Error:", error);
+    return "";
+  }
+}
