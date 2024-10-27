@@ -3,6 +3,7 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const connectDB = require("./config/database");
 const User = require("./models/user");
+// const Meeting = require("./models/meeting");
 const bcrypt = require("bcrypt");
 const app = express();
 const server = require("http").createServer(app);
@@ -73,6 +74,18 @@ app.get("/contactUs", (req, res) => {
 
 app.get("/features", (req, res) => {
   res.render("features");
+});
+
+
+app.post("/create-room", async (req, res) => {
+  const { password } = req.body;
+  const roomId = uuidV4(); // Unique room ID
+
+  // Store the room and password in the database
+  const meeting = new Meeting({ roomId, password });
+  await meeting.save();
+
+  res.redirect(`/room/${roomId}`);
 });
 
 
