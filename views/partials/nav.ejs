@@ -2,20 +2,20 @@
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="flex justify-between h-16">
           <div class="flex">
-              <div class="flex-shrink-0 flex items-center">
-                  <img class="h-8 w-auto" src="/images/logo.png" alt="Convowave">
-              </div>
-              <div class="hidden sm:ml-6 sm:flex sm:space-x-8">
-                  <a href="/features" class="border-transparent text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                      <i data-feather="layout" class="h-4 w-4 mr-2"></i>
+              <a href="/home" class="flex-shrink-0 flex items-center">
+                  <img class="h-8 w-auto" src="/images/logo.jpg" alt="Convowave">
+              </a>
+              <div class="hidden  sm:ml-12 sm:flex sm:space-x-8">
+                  <a href="/features" class="border-transparent text-gray-500 hover:text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                      
                       Features
                   </a>
-                  <a href="/aboutUs" class="border-transparent text-gray-500 hover:text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                      <i data-feather="info" class="h-4 w-4 mr-2"></i>
+                  <a href="#" class="border-transparent text-gray-500 hover:text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                      
                       About Us
                   </a>
                   <a href="/contactUs" class="border-transparent text-gray-500 hover:text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                      <i data-feather="mail" class="h-4 w-4 mr-2"></i>
+                      
                       Contact
                   </a>
               </div>
@@ -25,8 +25,8 @@
                   <div class="profile-dropdown">
                       <div class="flex items-center space-x-4 cursor-pointer">
                           <i data-feather="bell" class="h-5 w-5 text-gray-500"></i>
-                          <span class="text-gray-700"><%= user.name %></span>
-                          <img class="h-8 w-8 rounded-full" src="<%= user.avatar %>" alt="">
+                          <span style="font-size: 18px; color: rgb(97, 97, 97); font-weight: lighter; text-transform: uppercase; font-family:Verdana, Geneva, Tahoma, sans-serif;" class="text-gray-700"><%= user.name %></span>
+                          <img class="h-8 w-8 rounded-full" src="/images/user.png" alt="">
                           <i data-feather="chevron-down" class="h-4 w-4 text-gray-500"></i>
                       </div>
                       <div class="profile-dropdown-content">
@@ -46,11 +46,11 @@
                   </div>
               <% } else { %>
                   <a href="/login" class="text-gray-500 hover:text-gray-900 px-3 py-2 rounded-md text-sm font-medium inline-flex items-center">
-                      <i data-feather="log-in" class="h-4 w-4 mr-2"></i>
+                      
                       Login
                   </a>
                   <a href="/signup" class="ml-4 bg-black text-white px-4 py-2 rounded-md text-sm font-medium inline-flex items-center">
-                      <i data-feather="user-plus" class="h-4 w-4 mr-2"></i>
+                      
                       Sign Up
                   </a>
               <% } %>

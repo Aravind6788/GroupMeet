@@ -5,23 +5,23 @@
     
     <div class="main-container">
         <div class="form-container">
-            <h2>Create your account</h2>
-            <p>It's free and easy</p>
+            <h2 class="heading">Create your account</h2>
+            <p class="paragraph">It's free and easy</p>
             
             <form action="/signup" method="POST">
                 <!-- <div class="form-group">
                     <input type="text" name="name" class="form-input" placeholder="Enter your name">
                 </div> -->
                 <div class="form-group">
-                    <input type="text" id="username" name="username" class="form-input" placeholder="Type your e-mail or phone number">
+                    <input type="text" id="username" name="username" class="form-input" placeholder="Type your e-mail or phone number" required>
                 </div>
                 <div class="form-group">
-                    <input type="password" id="password" name="password" class="form-input" placeholder="Type your password">
+                    <input type="password" id="password" name="password" class="form-input" placeholder="Type your password" required>
                     <small>Must be 8 characters at least</small>
                 </div>
                 <div class="form-group">
                     <label>
-                        <input type="checkbox" name="terms">
+                        <input type="checkbox" name="terms" required>
                         By creating an account means you agree to the Terms and Conditions, and our Privacy Policy
                     </label>
                 </div>
@@ -30,13 +30,13 @@
     
             <div class="social-login">
                 <button class="btn btn-outline">
-                    <img src="/google.png" alt="Google">
+                    <img src="/images/google.svg" alt="Google">
                 </button>
                 <button class="btn btn-outline">
-                    <img src="/apple.png" alt="Apple">
+                    <img src="/images/apple.svg" alt="Apple">
                 </button>
                 <button class="btn btn-outline">
-                    <img src="/facebook.png" alt="Facebook">
+                    <img src="/images/facebook.svg" alt="Facebook">
                 </button>
             </div>
     

@@ -22,15 +22,19 @@
               });
           }
       });
+
+      feather.replace();
   </script>
 
-    <script>
-        // Initialize Feather icons
-        feather.replace();
-    </script>
+        
   
   <title>ConvoWave</title>
   <style>
+
+    body{
+        padding: 0;
+        margin: 0;
+    }
     
       * {
           margin: 0;
@@ -63,11 +67,17 @@
       }
 
       .main-container {
-          max-width: 1200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+            background: url("/images/loginBg.svg");
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
           margin: 0 auto;
           padding: 2rem;
+          height: 100vh;
       }
-
 
       .profile-dropdown {
           position: relative;
@@ -102,11 +112,21 @@
           background-color: #f3f4f6;
       }
 
+      .heading{
+        font-size: 25px;
+        font-weight: bold;
+      }
+
+      .paragraph{
+        font-size: 14px;
+        margin-bottom: 20px;
+      }
 
 
       .form-container {
           max-width: 400px;
-          margin: 2rem auto;
+          min-width: 400px;
+          /* margin: 2rem auto; */
           padding: 2rem;
           border-radius: 8px;
           background: #fff;
@@ -125,6 +145,17 @@
           margin-top: 0.5rem;
       }
 
+
+      .joincreatemeetcontain{
+        width: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100vh;
+      }
+
+
+
       .btn {
           width: 100%;
           padding: 0.75rem;
@@ -140,9 +171,35 @@
       }
 
       .btn-outline {
+          width: 50px;
+          border-radius: 50%;
           background: #fff;
           border: 1px solid #ddd;
+          display: flex;
+          justify-content: center;
+          align-items: center;
       }
+
+        .btn-outline2 {
+            background-color: transparent;
+            border: 1px solid #555; /* Change to desired border color */
+            color: #555; /* Change to desired text color */
+            padding: 10px 12px;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+        .btn-outline2:hover {
+            background-color: #555;
+            color: #fff;
+        }
+
+
+        .social-login2{
+          display: flex;
+          justify-content: start;
+          gap: 1rem;
+          margin-top: 0.5rem;
+        }
 
       .social-login {
           display: flex;
@@ -151,10 +208,63 @@
           margin-top: 1rem;
       }
 
+      .social-login2 > a ,.social-login > a{
+        width: 35px;
+        height: 35px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgb(203, 199, 199);
+        border-radius: 50%;
+      }
+
       .footer {
           background: #f5f5f5;
           padding: 2rem;
           margin-top: 4rem;
+      }
+
+      .headingfoot{
+        font-size: 20px;
+        font-weight: bold;
+      }
+
+      .manualicons{
+        display: flex;
+        align-items: center;
+        /* margin-bottom: 8px; */
+      }
+
+      .manualicons > img{
+        width: 16px;
+        height: 16px;
+        margin-right: 5px;
+      }
+
+      .socialicons1{
+        width: 24px;
+      }
+      .socialicons2{
+        width: 22px;
+      }
+      .socialicons3{
+        width: 20px;
+      }
+
+      .social-links{
+        display: flex;
+        column-gap: 8px;
+      }
+
+      .social-links > a{
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid rgb(203, 199, 199);
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        margin-top: 10px;
       }
 
       @media (max-width: 768px) {

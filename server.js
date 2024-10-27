@@ -44,6 +44,10 @@ app.get("/signup", (req, res) => {
   res.render("signup");
 });
 
+app.get("/home", (req, res) => {
+  res.render("home");
+});
+
 // Create meeting room
 app.get("/create-room", (req, res) => {
   res.render("create-room");
@@ -93,7 +97,7 @@ app.post("/login", async (req, res) => {
   if (user && (await bcrypt.compare(password, user.password))) {
     req.session.user = {
       name: user.username,
-      avatar: user.avatar || "/images/default-avatar.png", // Provide a default avatar path
+      avatar: user.avatar || "/images/user.png", // Provide a default avatar path
     };
     res.redirect("/home");
   } else {
