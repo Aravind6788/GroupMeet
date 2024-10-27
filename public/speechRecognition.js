@@ -16,7 +16,7 @@ if (SpeechRecognition) {
   let lastRecognitionTimestamp = Date.now();
   let recognitionAttempts = 0;
   const MAX_ATTEMPTS = 5;
-  const RESET_ATTEMPT_DELAY = 10000; // 10 seconds
+  const RESET_ATTEMPT_DELAY = 10000;
 
   function updateStatus(message) {
     if (statusIndicator) {
@@ -86,42 +86,15 @@ if (SpeechRecognition) {
     restartRecognition();
   });
 
-  function translateText(text, targetLang) {
-    return fetch("https://python-speech-reco-server.onrender.com/translate", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        text: text,
-        target_lang: targetLang,
-      }),
-    })
-      .then((response) => {
-        if (!response.ok) {
-          throw new Error(`HTTP error! status: ${response.status}`);
-        }
-        return response.json();
-      })
-      .then((data) => {
-        if (data && data.translation) {
-          return data.translation;
-        } else {
-          throw new Error("Translation not found in response");
-        }
-      })
-      .catch((error) => {
-        console.error("Translation Error:", error);
-        return ""; // Return an empty string on error
-      });
-  }
-
   recognition.onstart = () => {
     updateStatus("Speech recognition active");
   };
 
   recognition.onend = () => {
     updateStatus("Speech recognition inactive");
+    if (isRecognitionActive) {
+      restartRecognition();
+    }
   };
 
   recognition.onresult = async (event) => {
@@ -129,31 +102,22 @@ if (SpeechRecognition) {
     const current = event.resultIndex;
     const transcript = event.results[current][0].transcript;
 
+    // Update live captions
     output.textContent = transcript;
 
+    // Send transcript to other users
+    if (typeof socket !== "undefined") {
+      socket.emit("speech-result", ROOM_ID, transcript);
+    }
+
     if (event.results[current].isFinal) {
-      // Translate the transcript
-      const targetLang = document.getElementById("translation-language").value;
-      const translatedText = await translateText(transcript, targetLang);
-
-      // Display the translated text in the translated captions box
-      document.getElementById("translated-captions").textContent =
-        translatedText;
-
-      // Handle remote captions translation
-      const remoteCaptions =
-        document.getElementById("remote-captions").textContent;
-      const remoteTargetLang = document.getElementById(
-        "remote-translation-language"
+      // Translate own captions
+      const targetLang = document.getElementById(
+        "your-translation-language"
       ).value;
-      const remoteTranslatedText = await translateText(
-        remoteCaptions,
-        remoteTargetLang
-      );
-
-      // Display the translated remote captions
-      document.getElementById("remote-translated-captions").textContent =
-        remoteTranslatedText;
+      const translatedText = await translateText(transcript, targetLang);
+      document.getElementById("your-translated-captions").textContent =
+        translatedText;
     }
   };
 
@@ -161,9 +125,42 @@ if (SpeechRecognition) {
     handleRecognitionError(event.error);
   };
 
+  // Start recognition on page load
   startRecognition();
 
+  // Health check interval
   setInterval(checkRecognitionHealth, 5000);
+
+  // Export recognition object for use in other scripts
+  window.recognition = recognition;
 } else {
   console.error("Speech recognition not supported in this browser.");
+}
+
+async function translateText(text, targetLang) {
+  try {
+    const response = await fetch(
+      "https://python-speech-reco-server.onrender.com/translate",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          text: text,
+          target_lang: targetLang,
+        }),
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    return data.translation || "";
+  } catch (error) {
+    console.error("Translation Error:", error);
+    return "";
+  }
 }

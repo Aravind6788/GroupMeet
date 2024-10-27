@@ -22,85 +22,95 @@ navigator.mediaDevices
     myVideoStream = stream;
     addVideoStream(myVideo, stream);
 
-    // Answer calls
     myPeer.on("call", (call) => {
       call.answer(stream);
       const video = document.createElement("video");
       call.on("stream", (userVideoStream) => {
         addVideoStream(video, userVideoStream);
       });
-
-      // Setup data channel for incoming calls
-      if (call.peerConnection) {
-        call.peerConnection.ondatachannel = (event) => {
-          setupDataChannel(event.channel);
-        };
-      }
     });
 
-    // Handle new users
     socket.on("user-connected", (userId) => {
       connectToNewUser(userId, stream);
     });
   });
 
-// Handle peer connection
 myPeer.on("open", (id) => {
   socket.emit("join-room", ROOM_ID, id);
-  window.chatManager = new ChatManager(id, socket, ROOM_ID);
 });
 
-// Handle user disconnection
 socket.on("user-disconnected", (userId) => {
   if (peers[userId]) peers[userId].close();
 });
 
-// Caption sharing functionality
-function sendCaptions(caption) {
-  for (let peerId in peers) {
-    const peerConnection = peers[peerId];
-    if (peerConnection.peerConnection) {
-      if (!peerConnection.dataChannel) {
-        peerConnection.dataChannel =
-          peerConnection.peerConnection.createDataChannel("captions");
-        setupDataChannel(peerConnection.dataChannel);
-      }
+// Speech Recognition Setup
+window.recognition = new (window.SpeechRecognition ||
+  window.webkitSpeechRecognition)();
+recognition.continuous = true;
+recognition.interimResults = true;
 
-      try {
-        peerConnection.dataChannel.send(
-          JSON.stringify({
-            type: "caption",
-            text: caption,
-            userId: myPeer.id,
-          })
-        );
-      } catch (error) {
-        console.error("Error sending caption:", error);
-      }
+recognition.onstart = () => {
+  document.querySelector(".status-indicator").textContent =
+    "Speech recognition active";
+};
+
+recognition.onend = () => {
+  document.querySelector(".status-indicator").textContent =
+    "Speech recognition stopped";
+};
+
+recognition.onresult = (event) => {
+  let interimTranscript = "";
+  let finalTranscript = "";
+
+  for (let i = event.resultIndex; i < event.results.length; i++) {
+    const transcript = event.results[i][0].transcript;
+    if (event.results[i].isFinal) {
+      finalTranscript += transcript + " ";
+      // Emit the final transcript to other users
+      socket.emit("speech", finalTranscript.trim());
+    } else {
+      interimTranscript += transcript;
     }
   }
-}
 
-// Setup data channel handlers
-function setupDataChannel(dataChannel) {
-  dataChannel.onmessage = (event) => {
-    try {
-      const data = JSON.parse(event.data);
-      if (data.type === "caption") {
-        const remoteCaptions = document.getElementById("remote-captions");
-        remoteCaptions.textContent = `${data.text}`;
-      }
-    } catch (error) {
-      console.error("Error processing received caption:", error);
-    }
-  };
+  // Update local captions
+  document.getElementById("output").textContent =
+    finalTranscript || interimTranscript;
 
-  dataChannel.onerror = (error) => {
-    console.error("Data channel error:", error);
-  };
-}
+  // Translate own captions
+  const targetLang = document.getElementById("your-translation-language").value;
+  translateText(finalTranscript || interimTranscript, targetLang)
+    .then((translatedText) => {
+      document.getElementById("your-translated-captions").textContent =
+        translatedText;
+    })
+    .catch((error) => {
+      console.error("Error translating own captions:", error);
+    });
+};
 
-// Connect to new user
+// Handle remote speech events
+socket.on("remote-speech", (transcript) => {
+  const remoteCaptions = document.getElementById("remote-captions");
+  if (remoteCaptions) {
+    remoteCaptions.textContent = transcript;
+
+    // Translate remote captions
+    const remoteTargetLang = document.getElementById(
+      "translation-language"
+    ).value;
+    translateText(transcript, remoteTargetLang)
+      .then((translatedText) => {
+        document.getElementById("translated-captions").textContent =
+          translatedText;
+      })
+      .catch((error) => {
+        console.error("Error translating remote captions:", error);
+      });
+  }
+});
+
 function connectToNewUser(userId, stream) {
   const call = myPeer.call(userId, stream);
   const video = document.createElement("video");
@@ -113,17 +123,9 @@ function connectToNewUser(userId, stream) {
     video.remove();
   });
 
-  // Setup peer connection for captions
-  if (call.peerConnection) {
-    call.peerConnection.ondatachannel = (event) => {
-      setupDataChannel(event.channel);
-    };
-  }
-
   peers[userId] = call;
 }
 
-// Add video stream
 function addVideoStream(video, stream) {
   video.srcObject = stream;
   video.addEventListener("loadedmetadata", () => {
@@ -137,9 +139,9 @@ const muteButton = document.getElementById("muteButton");
 const videoButton = document.getElementById("videoButton");
 const leaveButton = document.getElementById("leaveButton");
 
-muteButton.addEventListener("click", toggleAudio);
-videoButton.addEventListener("click", toggleVideo);
-leaveButton.addEventListener("click", leaveRoom);
+muteButton?.addEventListener("click", toggleAudio);
+videoButton?.addEventListener("click", toggleVideo);
+leaveButton?.addEventListener("click", leaveRoom);
 
 function toggleAudio() {
   const audioTrack = myVideoStream.getAudioTracks()[0];
@@ -163,51 +165,10 @@ function leaveRoom() {
   window.location.href = "/";
 }
 
-// Initialize icons
-lucide.createIcons();
-
-// Add socket event handlers for chat messages
-socket.on("chat-message", (message) => {
-  if (chatManager) {
-    chatManager.receiveChatMessage(message);
-  }
-});
-
-// Connect speech recognition to caption sharing
-if (typeof recognition !== "undefined") {
-  recognition.onresult = async (event) => {
-    lastRecognitionTimestamp = Date.now();
-    const current = event.resultIndex;
-    const transcript = event.results[current][0].transcript;
-
-    output.textContent = transcript;
-
-    // Send captions to other participants
-    sendCaptions(transcript);
-
-    if (event.results[current].isFinal) {
-      const targetLang = document.getElementById("translation-language").value;
-      const translatedText = await translateText(transcript, targetLang);
-      document.getElementById("translated-captions").textContent =
-        translatedText;
-
-      const remoteCaptions =
-        document.getElementById("remote-captions").textContent;
-      const remoteTargetLang = document.getElementById(
-        "remote-translation-language"
-      ).value;
-      const remoteTranslatedText = await translateText(
-        remoteCaptions,
-        remoteTargetLang
-      );
-      document.getElementById("remote-translated-captions").textContent =
-        remoteTranslatedText;
-    }
-  };
-}
-
 // Translation function
 async function translateText(text, targetLang) {
+  if (!text) return "";
+
   try {
     const response = await fetch(
       "https://python-speech-reco-server.onrender.com/translate",
@@ -234,3 +195,54 @@ async function translateText(text, targetLang) {
     return "";
   }
 }
+
+// Language change handlers
+document
+  .getElementById("translation-language")
+  ?.addEventListener("change", async () => {
+    const remoteCaptions =
+      document.getElementById("remote-captions").textContent;
+    if (remoteCaptions) {
+      const targetLang = document.getElementById("translation-language").value;
+      const translatedText = await translateText(remoteCaptions, targetLang);
+      document.getElementById("translated-captions").textContent =
+        translatedText;
+    }
+  });
+
+document
+  .getElementById("your-translation-language")
+  ?.addEventListener("change", async () => {
+    const ownCaptions = document.getElementById("output").textContent;
+    if (ownCaptions) {
+      const targetLang = document.getElementById(
+        "your-translation-language"
+      ).value;
+      const translatedText = await translateText(ownCaptions, targetLang);
+      document.getElementById("your-translated-captions").textContent =
+        translatedText;
+    }
+  });
+
+// Speech recognition language change handler
+document.getElementById("language-select")?.addEventListener("change", (e) => {
+  if (window.recognition) {
+    window.recognition.lang = e.target.value;
+  }
+});
+
+// Start/Stop Speech Recognition buttons
+document.getElementById("start-button")?.addEventListener("click", () => {
+  if (window.recognition) {
+    window.recognition.start();
+  }
+});
+
+document.getElementById("stop-button")?.addEventListener("click", () => {
+  if (window.recognition) {
+    window.recognition.stop();
+  }
+});
+
+// Initialize icons
+lucide.createIcons();
