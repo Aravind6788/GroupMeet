@@ -30,7 +30,6 @@ app.use((req, res, next) => {
   next();
 });
 
-
 // default page render
 app.get("/", (req, res) => {
   res.render("login");
@@ -64,28 +63,17 @@ app.get("/meeting-room", (req, res) => {
   res.render("meeting-room");
 });
 
-
-
-// it is old room btn home
-app.get("/home", (req, res) => {
-  res.render("home");
+app.get("/aboutUs", (req, res) => {
+  res.render("aboutUs");
 });
 
-//Create meeting room
-app.get("/create-room", (req, res) => {
-  res.render("create-room");
+app.get("/contactUs", (req, res) => {
+  res.render("contactUs");
 });
 
-//join meeting by link and password
-app.get("/join-meeting", (req, res) => {
-  res.render("join-meeting");
+app.get("/features", (req, res) => {
+  res.render("features");
 });
-
-//joining meeting room by entering name
-app.get("/meeting-room", (req, res) => {
-  res.render("meeting-room");
-});
-
 
 
 app.post("/signup", async (req, res) => {
@@ -110,7 +98,7 @@ app.post("/login", async (req, res) => {
       name: user.username,
       avatar: user.avatar || '/images/default-avatar.png' // Provide a default avatar path
     };
-    res.redirect("/meeting-room");
+    res.redirect("/home");
   } else {
     res.status(400).send("Invalid username or password");
   }
@@ -121,9 +109,6 @@ app.get("/logout", (req, res) => {
   req.session.destroy();
   res.redirect("/");
 });
-
-
-
 
 
 app.get("/room", (req, res) => {
