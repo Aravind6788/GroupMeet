@@ -10,20 +10,19 @@ const myPeer = new Peer(undefined, {
 const myVideo = document.createElement("video");
 myVideo.muted = true;
 const peers = {};
+let myVideoStream;
 
+// Get user media
 navigator.mediaDevices
   .getUserMedia({
     video: true,
     audio: true,
   })
   .then((stream) => {
+    myVideoStream = stream;
     addVideoStream(myVideo, stream);
 
-    const streamEvent = new CustomEvent("audioStreamReady", {
-      detail: { stream },
-    });
-    window.dispatchEvent(streamEvent);
-
+    // Answer calls
     myPeer.on("call", (call) => {
       call.answer(stream);
       const video = document.createElement("video");
@@ -32,39 +31,33 @@ navigator.mediaDevices
       });
     });
 
+    // Handle new users
     socket.on("user-connected", (userId) => {
       connectToNewUser(userId, stream);
     });
-  })
-  .catch((error) => {
-    console.error("Error accessing media devices:", error);
-    alert("Unable to access camera and microphone. Please check permissions.");
   });
 
+// Handle peer connection
+myPeer.on("open", (id) => {
+  socket.emit("join-room", ROOM_ID, id);
+  // Initialize chat manager
+  window.chatManager = new ChatManager(id, socket, ROOM_ID);
+});
+
+// Handle user disconnection
 socket.on("user-disconnected", (userId) => {
   if (peers[userId]) peers[userId].close();
 });
 
-socket.on("remote-speech", (data) => {
-  const remoteCaptions = document.getElementById("remote-captions");
-  const languageName = getLanguageName(data.language);
-  remoteCaptions.innerText = `[${languageName}] ${data.text}`;
-
-  setTimeout(() => {
-    remoteCaptions.innerText = "";
-  }, 3000);
-});
-
-myPeer.on("open", (id) => {
-  socket.emit("join-room", ROOM_ID, id);
-});
-
+// Connect to new user
 function connectToNewUser(userId, stream) {
   const call = myPeer.call(userId, stream);
   const video = document.createElement("video");
+
   call.on("stream", (userVideoStream) => {
     addVideoStream(video, userVideoStream);
   });
+
   call.on("close", () => {
     video.remove();
   });
@@ -72,6 +65,7 @@ function connectToNewUser(userId, stream) {
   peers[userId] = call;
 }
 
+// Add video stream
 function addVideoStream(video, stream) {
   video.srcObject = stream;
   video.addEventListener("loadedmetadata", () => {
@@ -80,18 +74,43 @@ function addVideoStream(video, stream) {
   videoGrid.append(video);
 }
 
-function getLanguageName(langCode) {
-  const languages = {
-    "en-US": "English",
-    "ta-IN": "Tamil",
-    "hi-IN": "Hindi",
-    "ja-JP": "Japanese",
-    "ko-KR": "Korean",
-    "zh-CN": "Chinese",
-    "es-ES": "Spanish",
-    "fr-FR": "French",
-    "de-DE": "German",
-    "it-IT": "Italian",
-  };
-  return languages[langCode] || langCode;
+// Controls
+const muteButton = document.getElementById("muteButton");
+const videoButton = document.getElementById("videoButton");
+const leaveButton = document.getElementById("leaveButton");
+
+muteButton.addEventListener("click", toggleAudio);
+videoButton.addEventListener("click", toggleVideo);
+leaveButton.addEventListener("click", leaveRoom);
+
+function toggleAudio() {
+  const audioTrack = myVideoStream.getAudioTracks()[0];
+  audioTrack.enabled = !audioTrack.enabled;
+  muteButton.innerHTML = audioTrack.enabled
+    ? '<i data-lucide="mic" class="h-6 w-6"></i>'
+    : '<i data-lucide="mic-off" class="h-6 w-6"></i>';
+  lucide.createIcons();
 }
+
+function toggleVideo() {
+  const videoTrack = myVideoStream.getVideoTracks()[0];
+  videoTrack.enabled = !videoTrack.enabled;
+  videoButton.innerHTML = videoTrack.enabled
+    ? '<i data-lucide="video" class="h-6 w-6"></i>'
+    : '<i data-lucide="video-off" class="h-6 w-6"></i>';
+  lucide.createIcons();
+}
+
+function leaveRoom() {
+  window.location.href = "/";
+}
+
+// Initialize icons
+lucide.createIcons();
+
+// Add socket event handlers for chat messages
+socket.on("chat-message", (message) => {
+  if (chatManager) {
+    chatManager.receiveChatMessage(message);
+  }
+});
