@@ -18,6 +18,11 @@ if (SpeechRecognition) {
   const MAX_ATTEMPTS = 5;
   const RESET_ATTEMPT_DELAY = 10000;
 
+  // New variables for speech collection
+  let speechBuffer = [];
+  let silenceTimer = null;
+  const SILENCE_THRESHOLD = 1000; // 1 second of silence to consider it a gap
+
   function updateStatus(message) {
     if (statusIndicator) {
       statusIndicator.textContent = message;
@@ -92,6 +97,9 @@ if (SpeechRecognition) {
 
   recognition.onend = () => {
     updateStatus("Speech recognition inactive");
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
+    }
     if (isRecognitionActive) {
       restartRecognition();
     }
@@ -102,23 +110,45 @@ if (SpeechRecognition) {
     const current = event.resultIndex;
     const transcript = event.results[current][0].transcript;
 
-    // Update live captions
-    output.textContent = transcript;
-
-    // Send transcript to other users
-    if (typeof socket !== "undefined") {
-      socket.emit("speech-result", ROOM_ID, transcript);
+    // Clear any existing silence timer
+    if (silenceTimer) {
+      clearTimeout(silenceTimer);
     }
 
+    // Add the current transcript to the buffer
     if (event.results[current].isFinal) {
-      // Translate own captions
-      const targetLang = document.getElementById(
-        "your-translation-language"
-      ).value;
-      const translatedText = await translateText(transcript, targetLang);
-      document.getElementById("your-translated-captions").textContent =
-        translatedText;
+      speechBuffer.push(transcript.trim());
+    } else {
+      // Update live feedback with current transcript
+      output.textContent = transcript;
     }
+
+    // Set a new silence timer
+    silenceTimer = setTimeout(async () => {
+      if (speechBuffer.length > 0) {
+        // Combine all collected speech
+        const completeText = speechBuffer.join(" ");
+
+        // Update live captions with the complete text
+        output.textContent = completeText;
+
+        // Send transcript to other users
+        if (typeof socket !== "undefined") {
+          socket.emit("speech-result", ROOM_ID, completeText);
+        }
+
+        // Translate the complete text
+        const targetLang = document.getElementById(
+          "your-translation-language"
+        ).value;
+        const translatedText = await translateText(completeText, targetLang);
+        document.getElementById("your-translated-captions").textContent =
+          translatedText;
+
+        // Clear the buffer for the next speech segment
+        speechBuffer = [];
+      }
+    }, SILENCE_THRESHOLD);
   };
 
   recognition.onerror = (event) => {
