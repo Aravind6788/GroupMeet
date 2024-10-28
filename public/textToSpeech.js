@@ -60,6 +60,7 @@ document.addEventListener("DOMContentLoaded", function () {
         ) {
           const currentText = translatedCaptions.textContent.trim();
 
+          // Only speak if there's new text and we're not currently speaking
           if (
             currentText &&
             currentText !== lastSpokenText &&
@@ -130,7 +131,11 @@ document.addEventListener("DOMContentLoaded", function () {
       updateButtonState(isSpeaking);
       // Speak the current text immediately if it exists
       const currentText = translatedCaptions.textContent.trim();
-      if (currentText && !isCurrentlySpeaking) {
+      if (
+        currentText &&
+        !isCurrentlySpeaking &&
+        currentText !== lastSpokenText
+      ) {
         const selectedLanguage = document.getElementById(
           "translation-language"
         ).value;
