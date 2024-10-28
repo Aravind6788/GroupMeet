@@ -3,7 +3,7 @@ const mongoose = require("mongoose");
 const session = require("express-session");
 const connectDB = require("./config/database");
 const User = require("./models/user");
-// const Meeting = require("./models/meeting");
+const Meeting = require("./models/meeting");
 const bcrypt = require("bcrypt");
 const app = express();
 const server = require("http").createServer(app);
@@ -56,8 +56,10 @@ app.get("/create-room", (req, res) => {
 
 // Join meeting by link and password
 app.get("/join-meeting", (req, res) => {
-  res.render("join-meeting");
+  const username = req.session.username; // Replace with your session handling code
+  res.render('join-meeting', { username });
 });
+
 
 // Joining meeting room by entering name
 app.get("/meeting-room", (req, res) => {
@@ -76,17 +78,6 @@ app.get("/features", (req, res) => {
   res.render("features");
 });
 
-
-app.post("/create-room", async (req, res) => {
-  const { password } = req.body;
-  const roomId = uuidV4(); // Unique room ID
-
-  // Store the room and password in the database
-  const meeting = new Meeting({ roomId, password });
-  await meeting.save();
-
-  res.redirect(`/room/${roomId}`);
-});
 
 
 app.post("/signup", async (req, res) => {
@@ -129,8 +120,114 @@ app.get("/room", (req, res) => {
   res.redirect(`/${uuidV4()}`);
 });
 
-app.get("/:room", (req, res) => {
-  res.render("room", { roomId: req.params.room });
+app.get("/:room", async (req, res) => {
+  const roomId = req.params.room;
+  const username = req.query.username;
+
+  if (username) {
+    req.session.username = username;
+  }
+
+  try {
+    // Find the meeting by URL
+    const meeting = await Meeting.findOne({ link: roomId });
+
+
+    // If the meeting exists, check if a password is set
+    if (meeting) {
+      res.render("room", { roomId: roomId, isPasswordSet: meeting.isPasswordSet }); // This will be a boolean
+    } else {
+      // If the meeting doesn't exist, indicate that the password should be set
+      res.render("room", { roomId: roomId, isPasswordSet: false });
+    }
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
+});
+
+
+
+app.post("/verify-password", async (req, res) => {
+  const { roomId, password } = req.body;
+
+  try {
+    const meeting = await Meeting.findOne({ link: roomId });
+
+    if (meeting && await bcrypt.compare(password, meeting.password)) {
+      console.log("correct");
+      return res.status(200).send("Password is correct."); // Send success message
+    } else {
+      return res.status(401).send("Incorrect password."); // Send failure message
+    }
+  } catch (err) {
+    console.error(err);
+    return res.status(500).send("Server error");
+  }
+});
+
+
+
+app.post("/setpassword", async (req, res) => {
+  const { roomId, password } = req.body;
+
+  console.log(roomId);
+
+  if (!roomId || roomId.trim() === "") {
+    console.log("Room ID is missing or empty.");
+    return res.status(400).send("Room ID is required.");
+  }
+  
+
+  try {
+    // Hash the password before saving
+    const hashedPassword = await bcrypt.hash(password, 10);
+
+    const existingMeeting = await Meeting.findOne({link: roomId });
+    console.log()
+    if (existingMeeting) {
+      return res.status(400).send("Meeting already exists.");
+    }
+
+
+    // Create new meeting with the given URL and password
+    const newMeeting = new Meeting({ link: roomId, password: hashedPassword, isPasswordSet: true });
+    await newMeeting.save();
+    
+    res.status(200).send("Password set successfully.");
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("Server error");
+  }
+});
+
+
+
+// Endpoint to handle password entry and meeting creation
+app.post("/meeting", async (req, res) => {
+  const { link, password } = req.body;
+
+  // Check if the meeting URL already exists
+  let meeting = await Meeting.findOne({ link });
+
+  if (meeting) {
+    // Meeting exists, check password
+    const isMatch = await bcrypt.compare(password, meeting.password);
+
+    if (isMatch) {
+      // Correct password, proceed to the meeting
+      res.redirect(`/room/${link}`);
+    } else {
+      // Incorrect password
+      return res.status(401).send("Incorrect password.");
+    }
+  } else {
+    // Meeting does not exist, create it
+    const hashedPassword = await bcrypt.hash(password, 10);
+    meeting = new Meeting({ link, password: hashedPassword, isPasswordSet: true });
+    await meeting.save();
+    res.redirect(`/room/${link}`);
+  }
 });
 
 // Socket.io connection

@@ -2,9 +2,33 @@
 <html lang="en">
 <%- include('partials/head') %>
 <body class="bg-gray-50">
+<!-- <%- include('partials/nav') %> -->
 
-<%- include('partials/nav') %>
-
+<!-- Enter Password Modal -->
+<div id="enterPasswordModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white p-6 rounded shadow-md">
+      <h2 class="text-lg font-semibold mb-4 text text-center">Enter Creditials</h2>
+      <h4 class="text-lg mb-2">User Name</h4>
+      <input class="border p-2 w-full mb-4" type="text" id="usernameInput" value="<%= user ? user.name : '' %>" />
+      <h4 class="text-lg mb-2">Enter Password</h4>
+      <input type="password" id="meetingPassword" class="border p-2 w-full mb-4" placeholder="Password" />
+      <button id="submitPassword" class="bg-blue-500 text-white p-2 rounded">Submit</button>
+      <button id="closeEnterModal" class="bg-gray-300 p-2 rounded">Close</button>
+    </div>
+</div>
+  
+  <!-- Set Password Modal -->
+  <div id="setPasswordModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+    <div class="bg-white p-6 rounded shadow-md">
+      <h2 class="text-lg font-semibold mb-4 text text-center">Set Creditials</h2>
+      <h4 class="text-lg mb-2">User Name</h4>
+      <input class="border p-2 w-full mb-4" type="text" id="usernameInput" value="<%= user ? user.name : '' %>" />
+      <h4 class="text-lg mb-2">Set Password</h4>
+      <input type="password" id="newMeetingPassword" class="border p-2 w-full mb-4" placeholder="New Password" />
+      <button id="setPassword" class="bg-green-500 text-white p-2 rounded">Set Password</button>
+      <button id="closeSetModal" class="bg-gray-300 p-2 rounded">Close</button>
+    </div>
+  </div>
 
 
 <main class="container mx-auto p-4 flex gap-4 h-screen">
@@ -146,6 +170,9 @@
         </div>
     </div>
 </main>
+
+
+
 <!-- Scripts -->
 <script>
     const ROOM_ID = "<%= roomId %>";
@@ -182,6 +209,90 @@
     });
 </script>
 
+<script>
+    const isPasswordSet = "<%= JSON.stringify(isPasswordSet) %>" === 'true'; // Ensure it's a boolean
+    const roomId = "<%= roomId %>";
+
+    
+    const enterPasswordModal = document.getElementById("enterPasswordModal");
+    const setPasswordModal = document.getElementById("setPasswordModal");
+    const submitPasswordButton = document.getElementById("submitPassword");
+    const closeEnterModalButton = document.getElementById("closeEnterModal");
+    const setPasswordButton = document.getElementById("setPassword");
+    const closeSetModalButton = document.getElementById("closeSetModal");
+
+    if (isPasswordSet) {
+        // Show enter password modal if password is set
+        enterPasswordModal.classList.remove("hidden");
+    } else {
+        // Show set password modal if no meeting exists
+        setPasswordModal.classList.remove("hidden");
+    }
+
+
+
+    // Handle password submission for entering password
+    submitPasswordButton.addEventListener("click", async () => {
+
+        const password = document.getElementById("meetingPassword").value;
+
+        // Verify password with server
+        const response = await fetch(`/verify-password`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomId, password }),
+        });
+
+        if (response.ok) {
+            const message = await response.text(); // Get the success message
+            alert(message); // Alert the user that the password is correct
+            enterPasswordModal.classList.add("hidden"); // Hide modal
+            // Proceed to the meeting or handle further logic here
+        } else {
+            const message = await response.text(); // Get the error message
+            alert(message); // Alert the user that the password is incorrect
+        }
+    });
+
+    // Handle setting the password
+    setPasswordButton.addEventListener("click", async () => {
+
+        const newPassword = document.getElementById("newMeetingPassword").value;
+
+        // Save new meeting with password
+        const response = await fetch(`/setpassword`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ roomId, password: newPassword }),
+        });
+
+        console.log(response)
+
+        if (response.ok) {
+            const message = await response.text(); // Get the success message
+            alert(message); // Alert the user that the password has been set successfully
+            setPasswordModal.classList.add("hidden"); // Hide modal
+            // Optionally redirect or proceed to the meeting
+        } else {
+            const message = await response.text(); // Get the error message
+            alert(message); // Alert the user that setting the password failed
+        }
+    });
+
+
+   
+
+
+    // Close modals
+    closeEnterModalButton.addEventListener("click", () => {
+        enterPasswordModal.classList.add("hidden");
+    });
+
+    closeSetModalButton.addEventListener("click", () => {
+        setPasswordModal.classList.add("hidden");
+    });
+
+</script>
 
 </body>
 </html>
