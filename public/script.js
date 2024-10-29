@@ -162,7 +162,7 @@ function toggleVideo() {
 }
 
 function leaveRoom() {
-  window.location.href = "/";
+  window.location.href = "/home";
 }
 
 // Translation function

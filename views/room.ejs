@@ -5,26 +5,26 @@
 <!-- <%- include('partials/nav') %> -->
 
 <!-- Enter Password Modal -->
-<div id="enterPasswordModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+<div id="enterPasswordModal" class="modal hiddenv fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="bg-white p-6 rounded shadow-md">
       <h2 class="text-lg font-semibold mb-4 text text-center">Enter Creditials</h2>
       <h4 class="text-lg mb-2">User Name</h4>
       <input class="border p-2 w-full mb-4" type="text" id="usernameInput" value="<%= user ? user.name : '' %>" />
       <h4 class="text-lg mb-2">Enter Password</h4>
-      <input type="password" id="meetingPassword" class="border p-2 w-full mb-4" placeholder="Password" />
+      <input type="password" id="meetingPassword" class="border p-2 w-full mb-4" placeholder="Password" required />
       <button id="submitPassword" class="bg-blue-500 text-white p-2 rounded">Submit</button>
       <button id="closeEnterModal" class="bg-gray-300 p-2 rounded">Close</button>
     </div>
 </div>
   
   <!-- Set Password Modal -->
-  <div id="setPasswordModal" class="modal hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
+  <div id="setPasswordModal" class="modal hiddenv fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
     <div class="bg-white p-6 rounded shadow-md">
       <h2 class="text-lg font-semibold mb-4 text text-center">Set Creditials</h2>
       <h4 class="text-lg mb-2">User Name</h4>
       <input class="border p-2 w-full mb-4" type="text" id="usernameInput" value="<%= user ? user.name : '' %>" />
       <h4 class="text-lg mb-2">Set Password</h4>
-      <input type="password" id="newMeetingPassword" class="border p-2 w-full mb-4" placeholder="New Password" />
+      <input type="password" id="newMeetingPassword" class="border p-2 w-full mb-4" placeholder="New Password" required />
       <button id="setPassword" class="bg-green-500 text-white p-2 rounded">Set Password</button>
       <button id="closeSetModal" class="bg-gray-300 p-2 rounded">Close</button>
     </div>
@@ -42,9 +42,6 @@
             </div>
             <!-- Meeting Controls -->
             <div class="flex items-center gap-2">
-                <button class="p-2 rounded-full bg-gray-200">
-                    <i data-lucide="users-plus" class="h-5 w-5"></i>
-                </button>
                 <select id="language-select" class="language-selector bg-gray-200 rounded-full px-4 py-2">
                     <option value="en-US">English (US)</option>
                     <option value="ta-IN">Tamil (India)</option>
@@ -63,16 +60,19 @@
         <div class="flex-grow flex flex-col overallvideocontain">
             <!-- Video Grid -->
             <div class="flex-grow videoContainer" >
-                <div class="video-grid grid grid-cols-2 gap-4 videoda" id="video-grid">
+                <div class="videoda" id="video-grid">
                     <!-- Videos will be added dynamically -->
                 </div>
+
+                <div id="translated-captions" class="mt-2 min-h-[2rem] p-2 bg-white bg-opacity-60 text-black font-bold rounded text-center captionhere">Hello</div>
             </div>
+            <!-- video-grid grid grid-cols-2 gap-4 -->
 
 
-            <div id="translated-captions" class=" w-1/2 mt-2 min-h-[2rem] p-2 border border-black bg-opacity-20 text-black rounded text-center"></div>
+            
 
             <!-- Video Controls -->
-            <div class="mt-4 flex items-center justify-center gap-4 py-4">
+            <div class="mt-0 flex items-center justify-center gap-4 py-4">
                 <button id="muteButton" class="control-button p-4 rounded-full bg-gray-200 hover:bg-gray-300">
                     <i data-lucide="mic" class="h-5 w-5"></i>
                 </button>
@@ -83,7 +83,7 @@
                     <i data-lucide="phone-off" class="h-5 w-5"></i>
                 </button>
 
-                <div class="mt-2 flex justify-between items-center">
+                <div class=" mt-0 flex justify-between items-center">
                     <select id="translation-language" class="bg-gray-100 rounded px-2 py-1">
                         <option value="en">English</option>
                         <option value="ta">Tamil</option>
@@ -94,14 +94,14 @@
                         <option value="ja">Japanese</option>
                         <option value="ko">Korean</option>
                     </select>
-                    <button id="speak-button" class="p-2 rounded-full bg-blue-500 hover:bg-blue-600 text-white">
-            <i data-lucide="volume-2" class="h-5 w-5"></i>
-        </button>
+                    <button id="speak-button" class="ml-2 p-2 rounded-full bg-green-400 hover:bg-green-500 text-white">
+                        <i data-lucide="volume-2" class="h-5 w-5"></i>
+                    </button>
                 </div>
             </div>
 
             <!-- Captions Section -->
-            <div class="mt-4 space-y-4">
+            <div class="mt-4 space-y-4" hidden>
                 <!-- Your Speech Section -->
                 <div class="bg-white p-4 rounded-lg shadow" >
                     <h3 class="font-medium mb-2">Your Speech</h3>
@@ -125,7 +125,7 @@
                             <option value="zh">Chinese</option>
                         </select>
                     </div>
-                    <div id="your-translated-captions" class="mt-2 min-h-[2rem] p-2 bg-gray-50 rounded"></div>
+                    <div id="your-translated-captions" class=" ml-4 mt-2 min-h-[2rem] p-2 bg-gray-50 rounded"></div>
                 </div>
 
                 <!-- Remote Speech Section -->
@@ -152,7 +152,7 @@
     </div>
 
     <!-- Right Side - Chat Area -->
-    <div class="w-64 flex-shrink-0 flex flex-col bg-white rounded-lg shadow">
+    <div class="w-96 flex-shrink-0 flex flex-col bg-white rounded-lg shadow" >
         <div class="p-4 border-b">
             <h2 class="font-medium">Chat</h2>
         </div>
@@ -226,10 +226,10 @@
 
     if (isPasswordSet) {
         // Show enter password modal if password is set
-        enterPasswordModal.classList.remove("hidden");
+        enterPasswordModal.classList.remove("hiddenv");
     } else {
         // Show set password modal if no meeting exists
-        setPasswordModal.classList.remove("hidden");
+        setPasswordModal.classList.remove("hiddenv");
     }
 
 
@@ -249,7 +249,7 @@
         if (response.ok) {
             const message = await response.text(); // Get the success message
             alert(message); // Alert the user that the password is correct
-            enterPasswordModal.classList.add("hidden"); // Hide modal
+            enterPasswordModal.classList.add("hiddenv"); // Hide modal
             // Proceed to the meeting or handle further logic here
         } else {
             const message = await response.text(); // Get the error message
@@ -274,7 +274,7 @@
         if (response.ok) {
             const message = await response.text(); // Get the success message
             alert(message); // Alert the user that the password has been set successfully
-            setPasswordModal.classList.add("hidden"); // Hide modal
+            setPasswordModal.classList.add("hiddenv"); // Hide modal
             // Optionally redirect or proceed to the meeting
         } else {
             const message = await response.text(); // Get the error message
@@ -282,17 +282,15 @@
         }
     });
 
-
-   
-
-
     // Close modals
     closeEnterModalButton.addEventListener("click", () => {
-        enterPasswordModal.classList.add("hidden");
+        window.location.href = "/features";
+        enterPasswordModal.classList.add("hiddenv");
     });
 
     closeSetModalButton.addEventListener("click", () => {
-        setPasswordModal.classList.add("hidden");
+        window.location.href = "/features";
+        setPasswordModal.classList.add("hiddenv");
     });
 
 </script>
