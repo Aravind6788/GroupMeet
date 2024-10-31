@@ -231,37 +231,58 @@ app.post("/meeting", async (req, res) => {
 });
 
 // Socket.io connection
+// io.on("connection", (socket) => {
+//   console.log("New user connected:", socket.id);
+
+//   socket.on("join-room", (roomId, userId) => {
+//     console.log(`User  ${userId} joining room ${roomId}`);
+//     socket.join(roomId);
+//     socket.to(roomId).emit("user-connected", userId);
+
+//     // Chat message handling
+//     socket.on("chat-message", (roomId, message) => {
+//       socket.to(roomId).emit("chat-message", message);
+//     });
+
+//     // Speech result handling
+//     socket.on("speech-result", (roomId, data) => {
+//       socket.to(roomId).emit("remote-speech", data);
+//     });
+
+//     // Language change handling
+//     socket.on("language-change", (roomId, newLang) => {
+//       socket.to(roomId).emit("language-change", newLang);
+//     });
+
+//     // User disconnect handling
+//     socket.on("disconnect", () => {
+//       console.log(`User  ${userId} disconnected from room ${roomId}`);
+//       socket.to(roomId).emit("user-disconnected", userId);
+//     });
+//   });
+// });
+// Modify the existing socket.io connection handler
 io.on("connection", (socket) => {
   console.log("New user connected:", socket.id);
 
   socket.on("join-room", (roomId, userId) => {
-    console.log(`User  ${userId} joining room ${roomId}`);
+    console.log(`User ${userId} joining room ${roomId}`);
     socket.join(roomId);
     socket.to(roomId).emit("user-connected", userId);
 
     // Chat message handling
-    socket.on("chat-message", (roomId, message) => {
-      socket.to(roomId).emit("chat-message", message);
+    socket.on("chat-message", (roomId, data) => {
+      socket.to(roomId).emit("chat-message", data);
     });
 
-    // Speech result handling
-    socket.on("speech-result", (roomId, data) => {
-      socket.to(roomId).emit("remote-speech", data);
-    });
+    // ... (keep the existing code for speech and language handling)
 
-    // Language change handling
-    socket.on("language-change", (roomId, newLang) => {
-      socket.to(roomId).emit("language-change", newLang);
-    });
-
-    // User disconnect handling
     socket.on("disconnect", () => {
-      console.log(`User  ${userId} disconnected from room ${roomId}`);
+      console.log(`User ${userId} disconnected from room ${roomId}`);
       socket.to(roomId).emit("user-disconnected", userId);
     });
   });
 });
-
 // Server setup
 const PORT = process.env.PORT || 3000;
 server.listen(PORT, () => {
