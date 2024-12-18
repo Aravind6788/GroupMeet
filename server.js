@@ -276,7 +276,14 @@ io.on("connection", (socket) => {
     });
 
     // ... (keep the existing code for speech and language handling)
+    socket.on("speech-result", (roomId, data) => {
+      socket.to(roomId).emit("remote-speech", data);
+    });
 
+    // Language change handling
+    socket.on("language-change", (roomId, newLang) => {
+      socket.to(roomId).emit("language-change", newLang);
+    });
     socket.on("disconnect", () => {
       console.log(`User ${userId} disconnected from room ${roomId}`);
       socket.to(roomId).emit("user-disconnected", userId);

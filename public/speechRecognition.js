@@ -116,12 +116,17 @@ if (SpeechRecognition) {
     }
 
     // Add the current transcript to the buffer
-    if (event.results[current].isFinal) {
-      speechBuffer.push(transcript.trim());
-    } else {
-      // Update live feedback with current transcript
-      output.textContent = transcript;
-    }
+     if (event.results[current].isFinal) {
+       speechBuffer.push(transcript.trim());
+
+       // Emit the final transcript to all participants
+       if (typeof socket !== "undefined") {
+         socket.emit("speech-result", ROOM_ID, transcript.trim());
+       }
+     } else {
+       // Update live feedback with current transcript
+       output.textContent = transcript;
+     }
 
     // Set a new silence timer
     silenceTimer = setTimeout(async () => {

@@ -270,7 +270,18 @@ function addMessageToChat(username, message, isOwnMessage) {
 socket.on('chat-message', (data) => {
   addMessageToChat(data.username, data.message, false);
 });
+// Handle remote speech events
+socket.on("speech-result", async (transcript) => {
+    const remoteCaptions = document.getElementById("translated-captions");
+    if (remoteCaptions) {
+        remoteCaptions.textContent = transcript;
 
+        // Translate remote captions
+        const remoteTargetLang = document.getElementById("translation-language").value;
+        const translatedText = await translateText(transcript, remoteTargetLang);
+        document.getElementById("translated-captions").textContent = translatedText;
+    }
+});
 // Modify the existing code to handle chat input
 document.getElementById('send-button').addEventListener('click', () => {
   const chatInput = document.getElementById('chat-input');
